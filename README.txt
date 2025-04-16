@@ -55,3 +55,18 @@ For easy access, you can also run the precompiled `main.exe` file.
 
 1. Install Python  
 2. Install Pygame using:  
+pip install pygame
+
+yaml
+Copy
+Edit
+3. Run the game:
+- With Python:
+  ```
+  python main.py
+  ```
+- Or just open `main.exe` if available
+
+---
+
+Enjoy the game, and may your survival instincts guide you through the forest! 🌲⚔️
