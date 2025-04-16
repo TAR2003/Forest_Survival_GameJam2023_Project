@@ -1,72 +1,87 @@
-# 🌲 GameJamProject – *Forest Survival*
+# 🌲 Forest Survival – GameJamProject
 
-**Forest Survival** is a 2D survival game built using **Pygame**.  
-This project was developed as part of a game jam challenge.
-
----
-
-## 🕹️ Play the Game
-
-You can play this game on any machine that has:
-
-- ✅ **Python** installed  
-- ✅ **Pygame** installed  
-
-For easy access, you can also run the precompiled `main.exe` file.
+**Forest Survival** is a 2D action-survival game developed using **Pygame**.  
+This project was created as part of a **Game Jam** challenge.
 
 ---
 
-## 🎮 About the Game
+## 🖥️ How to Play
 
-**Forest Survival** is a fast-paced survival game where players must react quickly and use strategy to overcome obstacles and enemies.
+You can run this game on any machine that has:
 
-### 🎯 Controls
+- 🐍 Python installed  
+- 🎮 Pygame installed  
 
-- `Space` – Move forward  
+For quick access, simply launch the precompiled `main.exe` file.
+
+---
+
+## 🎮 Game Overview
+
+**Forest Survival** challenges players to dodge, jump, and defend themselves against various forest threats using skill and strategy.
+
+### 🔧 Controls
+
+- `Space` – Move  
 - `D` – Slide  
 - `J` – Jump  
-- `S` – Toggle shield  
-- `←` / `↓` / `→` – Set shield position to *top*, *middle*, or *bottom*  
-- 🖱️ Mouse Wheel – Adjust shield position (recommended for easier control)
+- `S` – Toggle Shield  
+- `←` / `↓` / `→` – Set shield position to **top**, **middle**, or **bottom**  
+- 🖱️ Mouse Wheel – Easily switch shield positions
 
 ---
 
-## 🔥 How to Survive
+## ⚔️ How to Survive
 
-- 🌳 **Danger Trees** – Slide or jump to pass through  
-- 🧙 **Wizard Attacks** – Only sliding can help you avoid damage  
-- 🐊 **Crocodile Attacks** – Only jumping can save you  
-- 🥷 **Ninja Attacks** – The toughest enemy:
-  - Use your shield to block projectiles  
-  - Get close to the ninja  
-  - Jump at the right time to get past them
+- 🌳 **Danger Tree** – Jump or slide to avoid it  
+- 🧙 **Wizard Attack** – Only **sliding** can save you  
+- 🐊 **Crocodile Attack** – Only **jumping** works  
+- 🥷 **Ninja** – The toughest enemy:
+  - Use your **shield** to block projectiles  
+  - Move in close while blocking  
+  - **Jump** at the right moment to pass the ninja
 
 ---
 
-## ❤️ Game Rules
+## ❤️ Game Mechanics
 
 - You start with **3 lives**  
-- Losing all 3 lives ends the game  
-- The longer you survive, the tougher it gets!
+- Each hit costs one life  
+- Game ends when all lives are lost  
+- Survive as long as you can!
 
 ---
 
 ## 🚀 Getting Started
 
-1. Install Python  
-2. Install Pygame using:  
-pip install pygame
+### 1. Install Dependencies
 
-yaml
-Copy
-Edit
-3. Run the game:
-- With Python:
-  ```
+Make sure Python and Pygame are installed:
+
+```bash
+pip install pygame
+```
+
+### 2. Run the Game
+
+- **Option 1:** Run with Python  
+  ```bash
   python main.py
   ```
-- Or just open `main.exe` if available
+
+- **Option 2:** Use `main.exe` for direct access (if available)
 
 ---
 
-Enjoy the game, and may your survival instincts guide you through the forest! 🌲⚔️
+## 📁 Folder Contents
+
+- `main.py` – The game's main source code  
+- `main.exe` – Executable version (optional)  
+- `assets/` – Contains images, sounds, and other resources  
+
+---
+
+## ✨ Final Words
+
+Enjoy the forest, dodge your enemies, and test your survival instincts!  
+**Good luck, warrior. 🌲🛡️⚔️**
