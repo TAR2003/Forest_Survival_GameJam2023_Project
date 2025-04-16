@@ -1,24 +1,57 @@
-# GameJamProject
-The name of the game is forest survival
-It is a pygame project
-It can run on any machine which has python and pygame installed on
-also main.exe can provide easy access
+# 🌲 GameJamProject – *Forest Survival*
 
+**Forest Survival** is a 2D survival game built using **Pygame**.  
+This project was developed as part of a game jam challenge.
 
-About the game:
-The game is a survival game.
-You can play this game by following some basic instructions.
-Press space to move, press d to slide, press j to jump.
-You can toggle your shield option by clicking s
-You can set your shild position by pressing KEY_LEFT for up, KEY_DOWN for middle and KEY_RIGHT for bottom position.
-You can also do it by using mouse wheels, which is much easier method.
+---
 
-How to survive:
-You can get past a danger tree by jumping or sliding
-You can only survive wizard attack by sliding
-You can only survive crocodile attack by jumping
-Defeating a ninja is tough.
-You have shield all the projectiles and try to close in.
-Use mousewheel to set the shield position.
-Once you close in, you should try to jump to get past the ninja.
-You have 3 lives at the beginning. Once you use all 3 of it, the game is over
+## 🕹️ Play the Game
+
+You can play this game on any machine that has:
+
+- ✅ **Python** installed  
+- ✅ **Pygame** installed  
+
+For easy access, you can also run the precompiled `main.exe` file.
+
+---
+
+## 🎮 About the Game
+
+**Forest Survival** is a fast-paced survival game where players must react quickly and use strategy to overcome obstacles and enemies.
+
+### 🎯 Controls
+
+- `Space` – Move forward  
+- `D` – Slide  
+- `J` – Jump  
+- `S` – Toggle shield  
+- `←` / `↓` / `→` – Set shield position to *top*, *middle*, or *bottom*  
+- 🖱️ Mouse Wheel – Adjust shield position (recommended for easier control)
+
+---
+
+## 🔥 How to Survive
+
+- 🌳 **Danger Trees** – Slide or jump to pass through  
+- 🧙 **Wizard Attacks** – Only sliding can help you avoid damage  
+- 🐊 **Crocodile Attacks** – Only jumping can save you  
+- 🥷 **Ninja Attacks** – The toughest enemy:
+  - Use your shield to block projectiles  
+  - Get close to the ninja  
+  - Jump at the right time to get past them
+
+---
+
+## ❤️ Game Rules
+
+- You start with **3 lives**  
+- Losing all 3 lives ends the game  
+- The longer you survive, the tougher it gets!
+
+---
+
+## 🚀 Getting Started
+
+1. Install Python  
+2. Install Pygame using:  
