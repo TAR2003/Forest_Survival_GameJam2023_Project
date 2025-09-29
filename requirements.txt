@@ -1,0 +1,35 @@
+# Forest Survival Enhanced Edition - Requirements
+# Python dependencies for the enhanced game systems
+
+# Core Game Engine
+pygame>=2.1.0              # Main game development framework
+numpy>=1.21.0              # Numerical operations and array handling
+psutil>=5.9.0              # System and process monitoring
+
+# Enhanced Systems Dependencies
+typing-extensions>=4.0.0   # Enhanced type hints support
+
+# Testing Framework
+pytest>=6.0.0             # Testing framework for automated tests
+pytest-cov>=2.0.0         # Test coverage reporting
+
+# Performance Monitoring
+memory-profiler>=0.60.0    # Memory usage profiling
+
+# Development Tools (Optional)
+# black>=22.0.0            # Code formatting
+# flake8>=4.0.0            # Code linting
+# mypy>=0.910              # Static type checking
+
+# Build and Deployment (Optional)
+# pyinstaller>=4.10        # Executable creation for distribution
+# setuptools>=60.0.0       # Package building
+# wheel>=0.37.0            # Wheel package format
+
+# Documentation (Optional)
+# markdown>=3.3.0          # Markdown processing for documentation
+
+# Platform-specific notes:
+# Windows: May need pywin32>=227 for advanced Windows features
+# macOS: May need pyobjc>=8.0 for macOS-specific functionality
+# Linux: May need system packages: python3-dev, libasound2-dev
