@@ -2,6 +2,16 @@
 
 ![Forest Survival Banner](pictures/newgame.png)
 
+## 🎬 Demo Video
+
+**🔥 Watch the game in action!** Check out our gameplay demo video:
+
+[![Forest Survival Demo](https://img.youtube.com/vi/IuZV4BaDJ5E/maxresdefault.jpg)](https://youtu.be/IuZV4BaDJ5E)
+
+**🎮 [► Play Demo Video](https://youtu.be/IuZV4BaDJ5E)**
+
+---
+
 **Forest Survival** is an intense 2D action-survival platformer game developed using **Pygame** for the **2023 Game Jam**. Navigate through a dangerous forest filled with mystical creatures, deadly obstacles, and challenging enemies while testing your reflexes and survival instincts.
 
 ---
