@@ -87,15 +87,19 @@ class Enemy:
         self.projectiles = [shot for shot in self.projectiles if shot["x"] > -40]
 
 
-def spawn_for_zone(zone: dict):
+def spawn_for_zone(zone: dict, difficulty: str = "normal"):
+    from src.effects.gameplay_polish import spawn_copies
+
     enemies = []
     x = 900
+    copies = spawn_copies(difficulty)
     for kind in zone.get("enemies", []):
         if kind not in ENEMY_STATS:
             continue
         ground = zone["ground_y"]
         height = ENEMY_STATS[kind]["height"]
         y = 420 if kind == "wizard" else ground - height
-        enemies.append(Enemy(kind, x, y))
-        x += 700
+        for _ in range(copies):
+            enemies.append(Enemy(kind, x, y))
+            x += 700
     return enemies

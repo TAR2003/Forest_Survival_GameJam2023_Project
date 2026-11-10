@@ -18,6 +18,7 @@ from src.ui.inventory_system import InventorySystem
 from src.ui.dialogue_system import DialogueState, DialogueSystem
 from src.ui.hud_system import HUDSystem
 from src.gameplay.progression import Progression
+from src.effects.gameplay_polish import damage_multiplier
 
 
 class _QuietAudio:
@@ -58,6 +59,10 @@ class GameplayScene(Scene):
         self.dialogue.bind(self.progression, self.inventory)
         self.dialogue.load_file()
         self.dialogue.assets = assets
+        self.difficulty = "normal"
+        if save_manager:
+            gameplay = save_manager.game_data.get("settings", {}).get("gameplay", {})
+            self.difficulty = gameplay.get("difficulty", "normal")
         self.hud = HUDSystem(input_manager, audio_manager or _QuietAudio())
         self.camera = Camera(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, 3400)
         self.day_night = DayNightCycle()
@@ -89,7 +94,7 @@ class GameplayScene(Scene):
         self.camera.zone_width = self.world.width
         weather_name = self.world.zone.get("weather", "clear")
         self.weather.current_weather = WEATHER.get(weather_name, WeatherType.CLEAR)
-        self.enemies = spawn_for_zone(self.world.zone)
+        self.enemies = spawn_for_zone(self.world.zone, self.difficulty)
         if reset_player:
             self.player.x = 120
             self.player.y = self.world.ground_y - self.player.height
@@ -160,10 +165,13 @@ class GameplayScene(Scene):
                         self.progression.note("ninja")
                     elif enemy.kind == "crocodile":
                         self.progression.complete_quest("clear_swamp")
+            if enemy.alive and enemy.kind in ("danger_tree", "crocodile"):
+                if enemy.rect().colliderect(self.player.rect()):
+                    self._hurt(self._scaled_damage(enemy.damage))
             if enemy.kind == "ninja":
                 for shot in list(enemy.projectiles):
                     if abs(shot["x"] - self.player.x) < 40:
-                        self.resolve_projectile(shot["top"], enemy.damage)
+                        self.resolve_projectile(shot["top"], self._scaled_damage(enemy.damage))
                         enemy.projectiles.remove(shot)
 
     def open_inventory(self):
@@ -176,6 +184,10 @@ class GameplayScene(Scene):
             if abs(self.player.x - speaker["x"]) < 90:
                 return speaker
         return None
+
+    def _scaled_damage(self, amount: int) -> int:
+        night = self.day_night.time_of_day == TimeOfDay.NIGHT
+        return max(1, int(round(amount * damage_multiplier(self.difficulty, night))))
 
     def resolve_projectile(self, shot_top: int, damage: int = 1) -> str:
         """Block a shot only at the matching shield height. Otherwise hurt the player."""
@@ -211,8 +223,8 @@ class GameplayScene(Scene):
         if not self.save_manager:
             return
         run = self.save_manager.game_data.setdefault("run", {})
-        run["health"] = 0
-        run["zone"] = self.world.zone_id
+        run["health"] = self.player.max_health
+        run["zone"] = "whispering_path"
         self._persist_progress()
         self.save_manager.save_game_data()
 

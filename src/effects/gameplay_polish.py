@@ -582,3 +582,27 @@ class GameplayPolishSystem:
                 'simplified_effects': self.simplified_effects
             }
         }
+
+
+# A normal clear is the night objective plus the four crossings and the palace fight.
+EXPECTED_CLEAR_MINUTES = {"easy": 18, "normal": 25, "hard": 32}
+_DAMAGE = {"easy": 0.75, "normal": 1.0, "hard": 1.35}
+_SPAWNS = {"easy": 1, "normal": 1, "hard": 2}
+NIGHT_DAMAGE = 1.25
+
+
+def damage_multiplier(difficulty: str = "normal", night: bool = False) -> float:
+    """Enemy damage scale. Night stacks on the difficulty scale."""
+    scale = _DAMAGE.get(difficulty, _DAMAGE["normal"])
+    if night:
+        scale *= NIGHT_DAMAGE
+    return scale
+
+
+def spawn_copies(difficulty: str = "normal") -> int:
+    """How many of each zone enemy to place."""
+    return _SPAWNS.get(difficulty, 1)
+
+
+def expected_clear_minutes(difficulty: str = "normal") -> int:
+    return EXPECTED_CLEAR_MINUTES.get(difficulty, EXPECTED_CLEAR_MINUTES["normal"])

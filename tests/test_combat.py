@@ -41,4 +41,5 @@ def test_sword_deals_ten_and_zero_health_ends_the_run(tmp_path):
     assert (tmp_path / "slot_1.json").exists()
     reloaded = SaveManager(tmp_path)
     assert reloaded.load_slot(1)
-    assert reloaded.game_data["run"]["health"] == 0
+    assert reloaded.game_data["run"]["zone"] == "whispering_path"
+    assert reloaded.game_data["run"]["health"] == scene.player.max_health
