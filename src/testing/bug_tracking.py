@@ -162,30 +162,8 @@ class AutomaticBugResolver:
         self.resolution_strategies["network_timeout"] = resolve_network_timeout
     
     def attempt_resolution(self, bug_report: BugReport) -> Tuple[bool, str]:
-        """Attempt to automatically resolve a bug."""
-        resolution_message = ""
-        
-        # Try category-specific resolution
-        category_key = bug_report.category.value
-        if category_key in self.resolution_strategies:
-            try:
-                resolution_message = self.resolution_strategies[category_key]()
-                self.resolved_count += 1
-                return True, resolution_message
-            except Exception as e:
-                return False, f"Auto-resolution failed: {e}"
-        
-        # Try pattern-based resolution
-        for pattern_name, strategy in self.resolution_strategies.items():
-            if pattern_name in bug_report.description.lower():
-                try:
-                    resolution_message = strategy()
-                    self.resolved_count += 1
-                    return True, resolution_message
-                except Exception as e:
-                    continue
-        
-        return False, "No automatic resolution available"
+        """Automatic fixes are disabled. Bugs stay open until a person changes the code."""
+        return False, "Automatic bug fixing is disabled"
 
 
 class BugTrackingSystem:
