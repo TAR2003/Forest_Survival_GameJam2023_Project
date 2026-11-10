@@ -16,6 +16,7 @@ from src.scenes.world_scene import DayNightCycle, TimeOfDay, WeatherSystem, Weat
 from src.systems.particle_system import ParticleSystem
 from src.ui.inventory_system import InventorySystem
 from src.ui.dialogue_system import DialogueState, DialogueSystem
+from src.ui.hud_system import HUDSystem
 from src.gameplay.progression import Progression
 
 
@@ -57,6 +58,7 @@ class GameplayScene(Scene):
         self.dialogue.bind(self.progression, self.inventory)
         self.dialogue.load_file()
         self.dialogue.assets = assets
+        self.hud = HUDSystem(input_manager, audio_manager or _QuietAudio())
         self.camera = Camera(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, 3400)
         self.day_night = DayNightCycle()
         self.day_night.cycle_duration = 8 * 60
@@ -104,7 +106,8 @@ class GameplayScene(Scene):
         if self.input_manager.is_action_just_pressed("inventory") and self.dialogue.state == DialogueState.HIDDEN:
             self.open_inventory()
         if self.input_manager.is_action_just_pressed("pause"):
-            self.request_scene("main_menu")
+            self._persist_progress()
+            self.request_scene("pause")
             return
         if self.dialogue.state != DialogueState.HIDDEN:
             self.dialogue.update(delta_time)
@@ -127,6 +130,17 @@ class GameplayScene(Scene):
         self.day_night.update(delta_time)
         self.elapsed_ms += int(delta_time * 1000)
         self.progression.add_time(delta_time)
+        weapon = getattr(self.inventory, "equipped_weapon", None) or "sword"
+        self.player.weapon_name = weapon.replace("_", " ").title()
+        self.hud.update(
+            delta_time,
+            config.SCREEN_WIDTH,
+            config.SCREEN_HEIGHT,
+            player=self.player,
+            progression=self.progression,
+            zone=self.world.zone,
+            time_label=format_time(self.elapsed_ms),
+        )
         if self.day_night.time_of_day == TimeOfDay.NIGHT and not getattr(self, "_night_noted", False):
             self.progression.note("night")
             self._night_noted = True
@@ -185,6 +199,8 @@ class GameplayScene(Scene):
         died = self.player.take_damage(damage)
         if damage > 0 and self.player.invulnerable_timer > 0:
             self.effects.shake(0.18, 6)
+        if damage > 0 and not died and self.audio_manager:
+            self.audio_manager.play_sound("fall", volume=0.5, category="sfx")
         if died:
             self._record_death()
             self.request_scene("game_over")
@@ -223,14 +239,11 @@ class GameplayScene(Scene):
             screen.blit(image, self.camera.world_to_screen(enemy.x, enemy.y))
         self._overlay_weather(screen)
         self.day_night.apply_lighting(screen)
-        if self.font is None:
-            self.font = pygame.font.Font(None, 32)
-        label = self.font.render(
-            f"{self.world.name}  {format_time(self.elapsed_ms)}",
-            True,
-            config.COLORS["white"],
-        )
-        screen.blit(label, (24, 16))
+        self.hud.render(screen)
+        if self.dialogue.state != DialogueState.HIDDEN:
+            self.dialogue.render(screen)
+        if self.inventory.is_open:
+            self.inventory.render(screen)
 
     def _overlay_weather(self, screen: pygame.Surface):
         if self.weather.current_weather == WeatherType.RAIN:

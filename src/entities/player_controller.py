@@ -96,6 +96,10 @@ class PlayerController:
     def feet(self) -> float:
         return self.y + self.height
 
+    def _sound(self, name: str):
+        if self.audio_manager:
+            self.audio_manager.play_sound(name, volume=0.4, category="sfx")
+
     def update(self, dt: float, ground_y: float = 640):
         self.enemy_should_jump = False
         self._read_input()
@@ -118,10 +122,12 @@ class PlayerController:
         if keys.is_action_just_pressed("slide") and self.on_ground and self.stamina >= 15:
             self.stamina -= 15
             self.slide_timer = self.slide_time
+            self._sound("slide")
         if keys.is_action_just_pressed("attack") and self.stamina >= 20 and self.attack_timer <= 0:
             self.stamina -= 20
             self.attack_timer = self.attack_time
             self.state = PlayerState.ATTACKING
+            self._sound("attack")
         if keys.is_action_just_pressed("shield"):
             self.shield_raised = not self.shield_raised
         if keys.is_action_just_pressed("shield_up"):
@@ -150,8 +156,7 @@ class PlayerController:
             self.coyote_timer = 0
             self.jump_buffer_timer = 0
             self.movement_state = MovementState.AIRBORNE
-            if self.audio_manager:
-                self.audio_manager.play_sound("jump", volume=0.4, category="sfx")
+            self._sound("jump")
         elif self._was_jump_held and not self._jump_held and self.vel_y < 0:
             self.vel_y *= 0.45
         self._was_jump_held = self._jump_held

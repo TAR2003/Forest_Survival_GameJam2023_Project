@@ -25,7 +25,7 @@ def test_boot_switches_menu_and_settings_then_quits():
         game.step(1 / 60)
         assert game.scene_manager.get_current_scene_name() == "main_menu"
         labels = [button.text for button in game.scene_manager.current_scene.buttons]
-        assert labels == ["Start", "Settings", "Quit"]
+        assert labels == ["Start", "Continue", "Settings", "Credits", "Quit"]
 
         game.audio_manager.play_music("theme", loops=-1)
         first = game.audio_manager.current_music

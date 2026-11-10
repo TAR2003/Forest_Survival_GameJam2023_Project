@@ -93,16 +93,24 @@ class ForestSurvivalGame:
     
     def _register_scenes(self):
         """Register all game scenes with the scene manager."""
+        from src.scenes.credits import CreditsScene
         from src.scenes.game_over import GameOverScene
         from src.scenes.gameplay_scene import GameplayScene
         from src.scenes.main_menu import MainMenuScene
+        from src.scenes.pause import PauseScene
         from src.scenes.settings_menu import SettingsScene
         from src.scenes.splash import SplashScene
 
         self.scene_manager.register_scene('splash', SplashScene(self.scene_manager))
         self.scene_manager.register_scene(
             'main_menu',
-            MainMenuScene(self.scene_manager, self.input_manager, self.audio_manager, self.settings_manager),
+            MainMenuScene(
+                self.scene_manager,
+                self.input_manager,
+                self.audio_manager,
+                self.settings_manager,
+                self.save_manager,
+            ),
         )
         self.scene_manager.register_scene(
             'gameplay',
@@ -117,7 +125,18 @@ class ForestSurvivalGame:
             'settings',
             SettingsScene(self.scene_manager, self.input_manager, self.audio_manager, self.settings_manager),
         )
-        self.scene_manager.register_scene('game_over', GameOverScene(self.scene_manager))
+        self.scene_manager.register_scene(
+            'pause',
+            PauseScene(self.scene_manager, self.audio_manager, self.save_manager),
+        )
+        self.scene_manager.register_scene(
+            'credits',
+            CreditsScene(self.scene_manager, self.audio_manager),
+        )
+        self.scene_manager.register_scene(
+            'game_over',
+            GameOverScene(self.scene_manager, self.audio_manager, self.save_manager),
+        )
         self.scene_manager.change_scene('splash', transition_duration=0)
     
     def _apply_settings(self):

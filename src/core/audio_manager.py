@@ -287,12 +287,13 @@ class AudioManager:
             print(f"Music track not found: {music_name}")
             return
 
-        if self.current_music == music_name and pygame.mixer.music.get_busy():
+        if self.current_music == music_name and self._music_is_playing():
             return
 
         music_path = self.music_tracks[music_name]
-        
+
         try:
+            self._stop_music_channel()
             if self.current_music and pygame.mixer.music.get_busy():
                 if fade_in > 0:
                     pygame.mixer.music.fadeout(int(fade_in * 1000))
@@ -315,7 +316,17 @@ class AudioManager:
             print(f"Playing music: {music_name}")
             
         except pygame.error as e:
-            print(f"Failed to play music {music_name}: {e}")
+            sound = self.sounds.get(music_name)
+            channel = self._get_available_channel("music") if sound else None
+            if sound is None or channel is None:
+                print(f"Failed to play music {music_name}: {e}")
+                return
+            self._stop_music_channel()
+            channel.play(sound, loops, self.music_volume * self.master_volume)
+            channel.sound_name = music_name
+            self._music_channel = channel
+            self.current_music = music_name
+            print(f"Playing music on a channel: {music_name}")
     
     def stop_music(self, fade_out: float = 0.0):
         """
@@ -329,8 +340,21 @@ class AudioManager:
                 pygame.mixer.music.fadeout(int(fade_out * 1000))
             else:
                 pygame.mixer.music.stop()
+        self._stop_music_channel()
         
         self.current_music = None
+
+    def _music_is_playing(self) -> bool:
+        if pygame.mixer.music.get_busy():
+            return True
+        channel = getattr(self, "_music_channel", None)
+        return bool(channel and channel.is_busy())
+
+    def _stop_music_channel(self):
+        channel = getattr(self, "_music_channel", None)
+        if channel:
+            channel.stop()
+        self._music_channel = None
     
     def set_master_volume(self, volume: float):
         """Set master volume (affects all audio)."""

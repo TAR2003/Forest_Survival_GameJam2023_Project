@@ -130,10 +130,10 @@ class AnimatedButton(UIElement):
         self.audio_manager = audio_manager
         
         # Colors
-        self.base_color = config.COLORS['dark_gray']
-        self.hover_color = config.COLORS['blue']
+        self.base_color = config.COLORS['brown']
+        self.hover_color = config.COLORS['green']
         self.text_color = config.COLORS['white']
-        self.border_color = config.COLORS['cyan']
+        self.border_color = config.COLORS['green']
         
         # Animation properties
         self.hover_scale = 1.1
@@ -639,12 +639,13 @@ class MainMenuScene(BaseScene):
     """
     
     def __init__(self, scene_manager, input_manager: InputManager, 
-                 audio_manager: AudioManager, settings_manager):
+                 audio_manager: AudioManager, settings_manager, save_manager=None):
         super().__init__()
         self.scene_manager = scene_manager
         self.input_manager = input_manager
         self.audio_manager = audio_manager
         self.settings_manager = settings_manager
+        self.save_manager = save_manager
         
         # Scene state
         self.state = MenuState.INTRO
@@ -666,8 +667,8 @@ class MainMenuScene(BaseScene):
         
         # Menu layout
         self.button_width = 300
-        self.button_height = 60
-        self.button_spacing = 20
+        self.button_height = 48
+        self.button_spacing = 12
         
         # Effects
         self.screen_flash_alpha = 0
@@ -708,12 +709,14 @@ class MainMenuScene(BaseScene):
         self.ui_elements.append(self.title_display)
         
         # Main menu buttons
-        button_start_y = 300
+        button_start_y = 250
         button_x = config.SCREEN_WIDTH // 2 - self.button_width // 2
         
         button_configs = [
             ("Start", "start"),
+            ("Continue", "continue"),
             ("Settings", "settings"),
+            ("Credits", "credits"),
             ("Quit", "quit"),
         ]
         
@@ -837,8 +840,14 @@ class MainMenuScene(BaseScene):
         """Handle button action."""
         if action == "start":
             self.scene_manager.change_scene("gameplay")
+        elif action == "continue":
+            if self.save_manager:
+                self.save_manager.load_slot(1)
+            self.scene_manager.change_scene("gameplay")
         elif action == "settings":
             self.scene_manager.change_scene("settings")
+        elif action == "credits":
+            self.scene_manager.change_scene("credits")
         elif action == "quit":
             self.scene_manager.change_scene("quit")
     
