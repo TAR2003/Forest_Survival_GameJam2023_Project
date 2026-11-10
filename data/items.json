@@ -1,0 +1,19 @@
+{
+  "items": [
+    {"id": "herb", "name": "Forest Herb", "type": "material", "rarity": "common", "stack": 20, "weight": 0.2, "description": "A bitter green leaf."},
+    {"id": "herbs", "name": "Bundle of Herbs", "type": "material", "rarity": "common", "stack": 10, "weight": 0.4, "description": "Enough herbs for a poultice."},
+    {"id": "potion", "name": "Healing Potion", "type": "consumable", "rarity": "uncommon", "stack": 5, "weight": 0.5, "heal": 2, "description": "Restores two health."},
+    {"id": "claws", "name": "Crocodile Claws", "type": "material", "rarity": "uncommon", "stack": 10, "weight": 0.6, "description": "Sharp and still wet."},
+    {"id": "weapon_scraps", "name": "Weapon Scraps", "type": "material", "rarity": "common", "stack": 20, "weight": 0.8, "description": "Twisted metal from a wizard bolt."},
+    {"id": "palace_key", "name": "Palace Key", "type": "key_item", "rarity": "rare", "stack": 1, "weight": 0.3, "description": "Opens the ninja's hall."},
+    {"id": "sword", "name": "Hunter Sword", "type": "weapon", "rarity": "common", "stack": 1, "weight": 2, "damage": 10, "description": "The blade you woke up with."},
+    {"id": "iron_sword", "name": "Iron Sword", "type": "weapon", "rarity": "uncommon", "stack": 1, "weight": 3, "damage": 16, "description": "A heavier edge."},
+    {"id": "fang_blade", "name": "Fang Blade", "type": "weapon", "rarity": "rare", "stack": 1, "weight": 2.5, "damage": 22, "description": "Claws set into a hilt."},
+    {"id": "wooden_shield", "name": "Wooden Shield", "type": "armor", "rarity": "common", "stack": 1, "weight": 3, "defense": 1, "description": "Three heights, one plank."},
+    {"id": "bark_shield", "name": "Bark Shield", "type": "armor", "rarity": "uncommon", "stack": 1, "weight": 4, "defense": 2, "description": "Layered forest bark."},
+    {"id": "owl_feather", "name": "Owl Feather", "type": "key_item", "rarity": "uncommon", "stack": 1, "weight": 0.1, "description": "The keeper's token."},
+    {"id": "traveler_bandage", "name": "Traveler Bandage", "type": "consumable", "rarity": "common", "stack": 5, "weight": 0.2, "heal": 1, "description": "A clean wrap."},
+    {"id": "swamp_moss", "name": "Swamp Moss", "type": "material", "rarity": "common", "stack": 15, "weight": 0.3, "description": "Cold and glowing faintly."},
+    {"id": "scout_map", "name": "Scout Map", "type": "key_item", "rarity": "rare", "stack": 1, "weight": 0.2, "description": "Marks the palace gate."}
+  ]
+}

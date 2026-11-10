@@ -14,6 +14,14 @@ from src.gameplay.camera import Camera
 from src.gameplay.world import World
 from src.scenes.world_scene import DayNightCycle, WeatherSystem, WeatherType
 from src.systems.particle_system import ParticleSystem
+from src.ui.inventory_system import InventorySystem
+
+
+class _QuietAudio:
+    def play_sound(self, *args, **kwargs):
+        return None
+    def play_music(self, *args, **kwargs):
+        return None
 
 
 WEATHER = {
@@ -39,6 +47,9 @@ class GameplayScene(Scene):
             self.player.weapon_damage = 10
         self.effects = VisualEffectsManager()
         self.particles = ParticleSystem(max_particles=64)
+        if not pygame.get_init():
+            pygame.init()
+        self.inventory = InventorySystem(input_manager, audio_manager or _QuietAudio(), rows=4, cols=6)
         self.camera = Camera(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, 3400)
         self.day_night = DayNightCycle()
         self.day_night.cycle_duration = 8 * 60
@@ -80,6 +91,8 @@ class GameplayScene(Scene):
         if not self._entered:
             self._load_zone("whispering_path", reset_player=True)
             self._entered = True
+        if self.input_manager.is_action_just_pressed("inventory"):
+            self.open_inventory()
         if self.input_manager.is_action_just_pressed("pause"):
             self.request_scene("main_menu")
             return
@@ -110,6 +123,9 @@ class GameplayScene(Scene):
                     if abs(shot["x"] - self.player.x) < 40:
                         self.resolve_projectile(shot["top"], enemy.damage)
                         enemy.projectiles.remove(shot)
+
+    def open_inventory(self):
+        self.inventory.toggle_inventory()
 
     def resolve_projectile(self, shot_top: int, damage: int = 1) -> str:
         """Block a shot only at the matching shield height. Otherwise hurt the player."""

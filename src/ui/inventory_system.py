@@ -515,7 +515,7 @@ class InventorySystem(HUDElement):
         if not self.is_open:
             self.is_open = True
             self.visible = True
-            self.audio_manager.play_sound('click', 0, 0, volume=0.4)
+            self.audio_manager.play_sound('click', volume=0.4)
     
     def close_inventory(self):
         """Close the inventory."""
@@ -525,7 +525,7 @@ class InventorySystem(HUDElement):
             self.tooltip.hide()
             self.selected_slot = None
             self.dragging_stack = None
-            self.audio_manager.play_sound('click', 0, 0, volume=0.4)
+            self.audio_manager.play_sound('click', volume=0.4)
     
     def toggle_inventory(self):
         """Toggle inventory open/closed."""
@@ -562,7 +562,7 @@ class InventorySystem(HUDElement):
         
         # Play sound if something was added
         if added > 0:
-            self.audio_manager.play_sound('click', 0, 0, volume=0.3)
+            self.audio_manager.play_sound('click', volume=0.3)
             
             # Show notification if inventory is closed
             if not self.is_open:
@@ -572,7 +572,7 @@ class InventorySystem(HUDElement):
         # Shake if inventory is full
         if remaining > 0:
             self.shake_timer = 0.3
-            self.audio_manager.play_sound('error', 0, 0, volume=0.5)
+            self.audio_manager.play_sound('error', volume=0.5)
         
         return remaining
     
@@ -702,7 +702,7 @@ class InventorySystem(HUDElement):
                     self.dragging_stack = clicked_slot.item_stack
                     clicked_slot.set_item_stack(None)
                     self.drag_offset = (mouse_pos[0] - clicked_slot.x, mouse_pos[1] - clicked_slot.y)
-                    self.audio_manager.play_sound('click', 0, 0, volume=0.3)
+                    self.audio_manager.play_sound('click', volume=0.3)
             
             return True
         
@@ -769,7 +769,7 @@ class InventorySystem(HUDElement):
         if target_slot.is_empty():
             # Drop on empty slot
             target_slot.set_item_stack(self.dragging_stack)
-            self.audio_manager.play_sound('click', 0, 0, volume=0.3)
+            self.audio_manager.play_sound('click', volume=0.3)
         elif target_slot.item_stack.item.item_id == self.dragging_stack.item.item_id:
             # Stack with same item
             remaining = target_slot.item_stack.add(self.dragging_stack.quantity)
@@ -779,13 +779,13 @@ class InventorySystem(HUDElement):
                 empty_slot = self._find_empty_slot()
                 if empty_slot:
                     empty_slot.set_item_stack(self.dragging_stack)
-            self.audio_manager.play_sound('click', 0, 0, volume=0.3)
+            self.audio_manager.play_sound('click', volume=0.3)
         else:
             # Swap items
             temp_stack = target_slot.item_stack
             target_slot.set_item_stack(self.dragging_stack)
             self.dragging_stack = temp_stack
-            self.audio_manager.play_sound('click', 0, 0, volume=0.3)
+            self.audio_manager.play_sound('click', volume=0.3)
     
     def _find_empty_slot(self) -> Optional[InventorySlot]:
         """Find first empty inventory slot."""
@@ -807,7 +807,7 @@ class InventorySystem(HUDElement):
         if slot.item_stack.quantity <= 0:
             slot.set_item_stack(None)
         
-        self.audio_manager.play_sound('heal', 0, 0, volume=0.5)
+        self.audio_manager.play_sound('heal', volume=0.5)
     
     def _equip_item(self, slot: InventorySlot):
         """Equip an item."""
@@ -815,7 +815,7 @@ class InventorySystem(HUDElement):
             return
         
         # Equipment would be handled by equipment system
-        self.audio_manager.play_sound('equip', 0, 0, volume=0.4)
+        self.audio_manager.play_sound('equip', volume=0.4)
     
     def render(self, surface: pygame.Surface):
         """Render the inventory system."""
@@ -907,3 +907,81 @@ class InventorySystem(HUDElement):
         # Apply transparency to show it's being dragged
         drag_surface.set_alpha(180)
         surface.blit(drag_surface, (item_x, item_y))
+
+    def use_item(self, item_id: str, player) -> bool:
+        """Use one consumable. A potion heals the player."""
+        for slot in self.slots:
+            if slot.is_empty() or slot.item_stack.item.item_id != item_id:
+                continue
+            item = slot.item_stack.item
+            if item.item_type != ItemType.CONSUMABLE:
+                return False
+            if item.heal_amount and player is not None:
+                player.health = min(player.max_health, player.health + item.heal_amount)
+            slot.item_stack.remove(1)
+            if slot.item_stack.quantity <= 0:
+                slot.set_item_stack(None)
+            self.current_weight = max(0, self.current_weight - item.weight)
+            return True
+        return False
+
+    def equip_item(self, item_id: str, player) -> bool:
+        """Equip a weapon or shield and copy its stats onto the player."""
+        for slot in self.slots:
+            if slot.is_empty() or slot.item_stack.item.item_id != item_id:
+                continue
+            item = slot.item_stack.item
+            if item.item_type == ItemType.WEAPON:
+                player.weapon_damage = item.damage or player.weapon_damage
+                self.equipped_weapon = item_id
+                return True
+            if item.item_type == ItemType.ARMOR:
+                player.shield_defense = item.defense
+                self.equipped_shield = item_id
+                return True
+        return False
+
+    def to_save(self) -> dict:
+        slots = []
+        for slot in self.slots:
+            if slot.is_empty():
+                slots.append(None)
+            else:
+                stack = slot.item_stack
+                slots.append({"id": stack.item.item_id, "quantity": stack.quantity})
+        return {
+            "slots": slots,
+            "equipped_weapon": getattr(self, "equipped_weapon", "sword"),
+            "equipped_shield": getattr(self, "equipped_shield", "wooden_shield"),
+        }
+
+    def load_save(self, data: dict, catalog: dict):
+        for slot in self.slots:
+            slot.set_item_stack(None)
+        self.current_weight = 0
+        for index, entry in enumerate(data.get("slots", [])):
+            if not entry or index >= len(self.slots):
+                continue
+            record = catalog[entry["id"]]
+            item = item_from_record(record)
+            self.slots[index].set_item_stack(ItemStack(item, entry["quantity"]))
+            self.current_weight += item.weight * entry["quantity"]
+        self.equipped_weapon = data.get("equipped_weapon")
+        self.equipped_shield = data.get("equipped_shield")
+
+
+def item_from_record(record: dict) -> Item:
+    """Build an Item from a catalog record."""
+    item = Item(
+        record["id"],
+        record["name"],
+        ItemType[record["type"].upper()],
+        ItemRarity[record.get("rarity", "common").upper()],
+        record.get("stack", 1),
+    )
+    item.description = record.get("description", "")
+    item.weight = record.get("weight", 1)
+    item.heal_amount = record.get("heal", 0)
+    item.damage = record.get("damage", 0)
+    item.defense = record.get("defense", 0)
+    return item
