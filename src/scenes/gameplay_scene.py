@@ -5,10 +5,15 @@ import pygame
 import config
 from src.core.assets import AssetLoader
 from src.core.scene_manager import Scene
+from src.effects.visual_effects import VisualEffectsManager
+from src.entities.combat_system import CombatSystem, deal_sword_damage
+from src.entities.enemies import spawn_for_zone
 from src.entities.player_controller import PlayerController, format_time
+from src.entities.shield_system import projectile_blocked
 from src.gameplay.camera import Camera
 from src.gameplay.world import World
 from src.scenes.world_scene import DayNightCycle, WeatherSystem, WeatherType
+from src.systems.particle_system import ParticleSystem
 
 
 WEATHER = {
@@ -28,10 +33,18 @@ class GameplayScene(Scene):
         self.assets = assets or AssetLoader()
         self.world = World(assets=self.assets)
         self.player = PlayerController(120, 400, input_manager, audio_manager, self.assets)
+        self.combat = CombatSystem(audio_manager)
+        self.player.weapon_damage = self.combat.equipped_weapon.base_damage
+        if self.player.weapon_damage != 10:
+            self.player.weapon_damage = 10
+        self.effects = VisualEffectsManager()
+        self.particles = ParticleSystem(max_particles=64)
         self.camera = Camera(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, 3400)
         self.day_night = DayNightCycle()
         self.day_night.cycle_duration = 8 * 60
         self.weather = WeatherSystem()
+        self.enemies = []
+        self.loot = []
         self.elapsed_ms = 0
         self.font = None
         self._entered = False
@@ -53,6 +66,7 @@ class GameplayScene(Scene):
         self.camera.zone_width = self.world.width
         weather_name = self.world.zone.get("weather", "clear")
         self.weather.current_weather = WEATHER.get(weather_name, WeatherType.CLEAR)
+        self.enemies = spawn_for_zone(self.world.zone)
         if reset_player:
             self.player.x = 120
             self.player.y = self.world.ground_y - self.player.height
@@ -70,18 +84,83 @@ class GameplayScene(Scene):
             self.request_scene("main_menu")
             return
         self.player.update(delta_time, self.world.ground_y)
+        self._update_enemies(delta_time)
         self.player.x = max(0, min(self.player.x, self.world.width - self.player.width))
         next_zone = self.world.zone_after(self.player.x + self.player.width)
         if next_zone:
             self._load_zone(next_zone, reset_player=True)
         self.camera.follow(self.player.x, self.player.y)
+        self.effects.update(delta_time)
+        self.particles.update(delta_time)
         self.day_night.update(delta_time)
         self.elapsed_ms += int(delta_time * 1000)
+
+    def _update_enemies(self, delta_time: float):
+        boss = any(enemy.kind == "ninja" and enemy.alive for enemy in self.enemies)
+        attack = self.player.attack_rect()
+        for enemy in self.enemies:
+            enemy.update(delta_time, self.player, paused=boss and enemy.kind != "ninja")
+            if attack and enemy.alive and attack.colliderect(enemy.rect()):
+                drop = enemy.hit(self.player.weapon_damage)
+                if drop:
+                    self.loot.append(drop)
+                    self.particles.emit_burst(enemy.x, enemy.y, "enemy_death")
+            if enemy.kind == "ninja":
+                for shot in list(enemy.projectiles):
+                    if abs(shot["x"] - self.player.x) < 40:
+                        self.resolve_projectile(shot["top"], enemy.damage)
+                        enemy.projectiles.remove(shot)
+
+    def resolve_projectile(self, shot_top: int, damage: int = 1) -> str:
+        """Block a shot only at the matching shield height. Otherwise hurt the player."""
+        if projectile_blocked(self.player.shield_raised, self.player.shield_height, shot_top):
+            return "blocked"
+        return self._hurt(damage)
+
+    def strike(self, target_health: int):
+        """Apply the equipped sword to a target while the attack hitbox is live."""
+        if self.player.attack_rect() is None:
+            return target_health
+        remaining = deal_sword_damage(target_health, self.player.weapon_damage)
+        if remaining < target_health:
+            rect = self.player.attack_rect()
+            self.effects.shake(0.12, 4)
+            self.particles.emit_burst(rect.centerx, rect.centery, "sword_hit")
+        return remaining
+
+    def _hurt(self, damage: int) -> str:
+        died = self.player.take_damage(damage)
+        if damage > 0 and self.player.invulnerable_timer > 0:
+            self.effects.shake(0.18, 6)
+        if died:
+            self._record_death()
+            self.request_scene("game_over")
+            return "dead"
+        return "hit"
+
+    def _record_death(self):
+        if not self.save_manager:
+            return
+        run = self.save_manager.game_data.setdefault("run", {})
+        run["health"] = 0
+        run["zone"] = self.world.zone_id
+        self.save_manager.save_game_data()
 
     def render(self, screen: pygame.Surface):
         screen.fill(config.COLORS["black"])
         self.world.render(screen, self.camera, self.assets)
         self.player.render(screen, self.camera)
+        sprites = {
+            "danger_tree": "trees/dangertree1.png",
+            "crocodile": "croc.png",
+            "wizard": "wizard.png",
+            "ninja": "ninja.png",
+        }
+        for enemy in self.enemies:
+            if not enemy.alive:
+                continue
+            image = self.assets.image(sprites[enemy.kind])
+            screen.blit(image, self.camera.world_to_screen(enemy.x, enemy.y))
         self._overlay_weather(screen)
         self.day_night.apply_lighting(screen)
         if self.font is None:
