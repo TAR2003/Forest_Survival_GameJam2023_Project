@@ -94,17 +94,25 @@ class ForestSurvivalGame:
     def _register_scenes(self):
         """Register all game scenes with the scene manager."""
         from src.scenes.game_over import GameOverScene
+        from src.scenes.gameplay_scene import GameplayScene
         from src.scenes.main_menu import MainMenuScene
         from src.scenes.settings_menu import SettingsScene
         from src.scenes.splash import SplashScene
-        from src.scenes.zone_coming import ZoneComingScene
 
         self.scene_manager.register_scene('splash', SplashScene(self.scene_manager))
         self.scene_manager.register_scene(
             'main_menu',
             MainMenuScene(self.scene_manager, self.input_manager, self.audio_manager, self.settings_manager),
         )
-        self.scene_manager.register_scene('gameplay', ZoneComingScene(self.scene_manager))
+        self.scene_manager.register_scene(
+            'gameplay',
+            GameplayScene(
+                self.scene_manager,
+                self.input_manager,
+                self.audio_manager,
+                self.save_manager,
+            ),
+        )
         self.scene_manager.register_scene(
             'settings',
             SettingsScene(self.scene_manager, self.input_manager, self.audio_manager, self.settings_manager),

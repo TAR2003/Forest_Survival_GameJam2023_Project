@@ -1,0 +1,74 @@
+{
+  "zones": [
+    {
+      "id": "whispering_path",
+      "name": "Whispering Path",
+      "width": 3400,
+      "ground_y": 640,
+      "exit": "owl_clearing",
+      "weather": "clear",
+      "npcs": ["owl_keeper"],
+      "enemies": ["danger_tree"],
+      "trees": ["trees/treenormal.png", "trees/pine1.png", "trees/treewithowlclosed.png"],
+      "layers": [
+        {"image": "bg.png", "speed": 0.15, "y": -40},
+        {"image": "bgfront3rdrow.png", "speed": 0.35, "y": 160},
+        {"image": "bgfront2ndrow.png", "speed": 0.55, "y": 250},
+        {"image": "bgfront1strow.png", "speed": 0.75, "y": 340},
+        {"image": "walkway.png", "speed": 1.0, "y": 560}
+      ]
+    },
+    {
+      "id": "owl_clearing",
+      "name": "Owl Clearing",
+      "width": 3000,
+      "ground_y": 640,
+      "exit": "swamp_crossing",
+      "weather": "clear",
+      "npcs": ["wounded_traveler"],
+      "enemies": ["wizard"],
+      "trees": ["trees/treewithowlopen.png", "trees/treepink.png", "trees/treeyellow.png"],
+      "layers": [
+        {"image": "bg.png", "speed": 0.15, "y": -40},
+        {"image": "bgfront3rdrow.png", "speed": 0.35, "y": 160},
+        {"image": "bgfront2ndrow.png", "speed": 0.55, "y": 250},
+        {"image": "bgfront1strow.png", "speed": 0.75, "y": 340},
+        {"image": "walkway.png", "speed": 1.0, "y": 560}
+      ]
+    },
+    {
+      "id": "swamp_crossing",
+      "name": "Swamp Crossing",
+      "width": 3200,
+      "ground_y": 640,
+      "exit": "ninja_palace",
+      "weather": "rain",
+      "npcs": ["swamp_hermit"],
+      "enemies": ["crocodile"],
+      "trees": ["trees/treered.png", "trees/treeorange.png", "trees/dangertree1.png"],
+      "layers": [
+        {"image": "bg.png", "speed": 0.15, "y": -40},
+        {"image": "bgfront3rdrow.png", "speed": 0.35, "y": 160},
+        {"image": "bgfront2ndrow.png", "speed": 0.55, "y": 250},
+        {"image": "justgreen.png", "speed": 0.8, "y": 420},
+        {"image": "walkway.png", "speed": 1.0, "y": 560}
+      ]
+    },
+    {
+      "id": "ninja_palace",
+      "name": "Ninja Palace",
+      "width": 2800,
+      "ground_y": 640,
+      "exit": null,
+      "weather": "fog",
+      "npcs": ["palace_scout"],
+      "enemies": ["ninja"],
+      "trees": ["trees/pine4.png", "trees/treenormal.png"],
+      "layers": [
+        {"image": "palace.png", "speed": 0.2, "y": 40},
+        {"image": "bgfront2ndrow.png", "speed": 0.5, "y": 260},
+        {"image": "walkway.png", "speed": 1.0, "y": 560}
+      ]
+    }
+  ]
+}
