@@ -210,10 +210,13 @@ This enhanced version includes comprehensive new systems built on top of the ori
 - **Code Quality Assurance**: Comprehensive validation and testing
 - **Professional Documentation**: Complete API and developer guides
 
-To experience the enhanced edition with all these features:
+The new game runs from the project root once the engine is in place:
+
 ```bash
-python src/master_game_engine.py
+python main.py
 ```
+
+`src/master_game_engine.py` is not a separate enhanced engine. The playable jam build is preserved at `legacy/original_main.py`.
 
 ---
 
@@ -221,51 +224,36 @@ python src/master_game_engine.py
 
 ### 📋 Prerequisites
 
-```bash
-# Python 3.7 or higher
-python --version
+Python 3.9 or newer.
 
-# Pygame library
-pip install pygame
+```bash
+pip install -r requirements.txt
 ```
 
 ### 💻 Running the Game
 
-#### Option 1: Original Game
-```bash
-# Navigate to game directory
-cd Forest_Survival_GameJam2023_Project
+The original 2023 jam game is unchanged and lives in `legacy/original_main.py`:
 
-# Run the original game
+```bash
+python legacy/original_main.py
+```
+
+The side-view RPG entry point is `main.py`. Until that launcher replaces the jam loop, `python main.py` still starts the original game. After the engine boots, `python main.py` starts the new game (splash, menu, zones, combat, and saves).
+
+```bash
 python main.py
 ```
 
-#### Option 2: Enhanced Edition (Recommended)
-```bash
-# Run the enhanced game with all new systems
-python src/master_game_engine.py
-```
-
-#### Option 3: Executable (Windows)
-```bash
-# Double-click main.exe or run from command line
-./main.exe
-```
+A checked-in Windows build of the jam game is `main.exe`. It is not rebuilt from the RPG sources.
 
 ### 🔧 Development Setup
 
 ```bash
-# Clone the repository
 git clone https://github.com/TAR2003/Forest_Survival_GameJam2023_Project.git
-
-# Navigate to project directory
 cd Forest_Survival_GameJam2023_Project
-
-# Install dependencies
-pip install pygame
-
-# Run in development mode
-python main.py
+pip install -r requirements.txt
+python -m pytest
+python legacy/original_main.py
 ```
 
 ---
@@ -275,7 +263,8 @@ python main.py
 ```
 Forest_Survival_GameJam2023_Project/
 │
-├── main.py                    # Main game file (1074 lines of code)
+├── main.py                    # Game entry. Jam loop until the RPG launcher lands
+├── legacy/original_main.py    # Original jam game, unchanged
 ├── main.exe                   # Compiled executable
 ├── README.md                  # This documentation file
 │

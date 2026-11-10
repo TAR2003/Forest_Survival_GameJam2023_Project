@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+saves/
+*.log
+
+# Local build output. Tracked web export under build/web stays in git.
+dist/
+*.spec
+
+.idea/
+.vscode/
