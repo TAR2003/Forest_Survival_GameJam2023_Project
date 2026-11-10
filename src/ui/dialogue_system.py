@@ -3,9 +3,12 @@ Forest Survival - Dialogue System
 Modern dialogue system with typewriter effects, choices, and character portraits.
 """
 
-import pygame
+import json
 import math
 import time
+from pathlib import Path
+
+import pygame
 from typing import Dict, List, Tuple, Optional, Any, Callable
 from enum import Enum
 
@@ -700,8 +703,61 @@ class DialogueSystem:
             node.typewriter_speed = node_data.get('typewriter_speed', 50)
             node.auto_advance_delay = node_data.get('auto_advance_delay', 2.0)
             node.allow_skip = node_data.get('allow_skip', True)
+            node.portrait = node_data.get('portrait')
+            node.effect_ids = node_data.get('effects', [])
             
             self.dialogue_tree[node_id] = node
+
+    def bind(self, progression, inventory):
+        """Quest flags and the bag that dialogue choices change."""
+        self.progression = progression
+        self.inventory = inventory
+
+    def load_file(self, path: str = None):
+        """Load speakers and nodes from data/dialogue.json."""
+        file_path = Path(path) if path else Path(__file__).resolve().parents[2] / "data" / "dialogue.json"
+        payload = json.loads(file_path.read_text(encoding="utf-8"))
+        self.speakers = payload["speakers"]
+        self.load_dialogue_tree(payload["nodes"])
+        return payload
+
+    def condition_met(self, condition: str) -> bool:
+        progress = getattr(self, "progression", None)
+        if condition.startswith("flag:"):
+            name = condition.split(":", 1)[1]
+            return bool(progress and progress.flags.get(name))
+        if condition.startswith("quest_complete:"):
+            quest_id = condition.split(":", 1)[1]
+            return bool(progress and progress.quests.get(quest_id) == "complete")
+        return True
+
+    def apply_effect(self, effect: str):
+        progress = getattr(self, "progression", None)
+        inventory = getattr(self, "inventory", None)
+        kind, _, rest = effect.partition(":")
+        if kind == "flag" and progress is not None:
+            progress.flags[rest] = True
+        elif kind == "quest" and progress is not None:
+            progress.complete_quest(rest)
+        elif kind == "active_quest" and progress is not None:
+            progress.active_quest = rest
+        elif kind == "give" and inventory is not None:
+            item_id, _, count = rest.partition(":")
+            quantity = int(count) if count else 1
+            catalog = json.loads((Path(__file__).resolve().parents[2] / "data" / "items.json").read_text(encoding="utf-8"))
+            record = next(row for row in catalog["items"] if row["id"] == item_id)
+            from src.ui.inventory_system import item_from_record
+            inventory.add_item(item_from_record(record), quantity)
+
+    def choose(self, index: int):
+        """Skip the typewriter if needed and pick a choice by index."""
+        if self.state == DialogueState.TYPING:
+            self.dialogue_box.skip_typing()
+            self._transition_to_next_state()
+        if self.state != DialogueState.CHOOSING:
+            return
+        self.choice_panel.selected_index = index
+        self.advance_dialogue()
     
     def start_dialogue(self, start_node_id: str):
         """Start dialogue from specified node."""
@@ -724,11 +780,13 @@ class DialogueSystem:
         )
         
         # Set portrait
-        self.portrait.set_character(self.current_node.speaker)
+        self.portrait.set_character(self.current_node.speaker, self._portrait_surface(self.current_node))
         self.portrait.set_speaking(True)
+        for effect in getattr(self.current_node, "effect_ids", []):
+            self.apply_effect(effect)
         
         # Play dialogue start sound
-        self.audio_manager.play_sound('dialogue_start', 0, 0, volume=0.6)
+        self.audio_manager.play_sound('dialogue_start', volume=0.6)
         
         # Execute node effects
         self.current_node.execute_effects()
@@ -749,7 +807,7 @@ class DialogueSystem:
         self.portrait.set_speaking(False)
         
         # Play dialogue end sound
-        self.audio_manager.play_sound('dialogue_end', 0, 0, volume=0.4)
+        self.audio_manager.play_sound('dialogue_end', volume=0.4)
         
         # Call callback
         if self.on_dialogue_end:
@@ -766,7 +824,7 @@ class DialogueSystem:
             if self.dialogue_box.is_typing() and self.current_node.allow_skip:
                 # Skip typing
                 self.dialogue_box.skip_typing()
-                self.audio_manager.play_sound('click', 0, 0, volume=0.3)
+                self.audio_manager.play_sound('click', volume=0.3)
             else:
                 # Move to waiting/choosing state
                 self._transition_to_next_state()
@@ -788,10 +846,14 @@ class DialogueSystem:
         if self.current_node.choices:
             # Show choices
             self.state = DialogueState.CHOOSING
-            self.choice_panel.set_choices([
-                DialogueChoice(choice['text'], choice.get('next_node', ''))
-                for choice in self.current_node.choices
-            ])
+            built = []
+            for raw in self.current_node.choices:
+                choice = DialogueChoice(raw['text'], raw.get('next_node', ''))
+                choice.effect_ids = raw.get('effects', [])
+                choice.condition_ids = raw.get('conditions', [])
+                choice.disabled = not all(self.condition_met(item) for item in choice.condition_ids)
+                built.append(choice)
+            self.choice_panel.set_choices(built)
             self.choice_panel.visible = True
             self.portrait.set_speaking(False)
         else:
@@ -803,13 +865,15 @@ class DialogueSystem:
         # Execute choice effects
         for effect in choice.effects:
             effect()
+        for effect in getattr(choice, "effect_ids", []):
+            self.apply_effect(effect)
         
         # Call callback
         if self.on_choice_selected:
             self.on_choice_selected(choice)
         
         # Play selection sound
-        self.audio_manager.play_sound('click', 0, 0, volume=0.5)
+        self.audio_manager.play_sound('click', volume=0.5)
         
         # Move to next node or end dialogue
         if choice.next_node and choice.next_node in self.dialogue_tree:
@@ -839,8 +903,10 @@ class DialogueSystem:
         )
         
         # Update portrait
-        self.portrait.set_character(self.current_node.speaker)
+        self.portrait.set_character(self.current_node.speaker, self._portrait_surface(self.current_node))
         self.portrait.set_speaking(True)
+        for effect in getattr(self.current_node, "effect_ids", []):
+            self.apply_effect(effect)
         
         # Execute node effects
         self.current_node.execute_effects()
@@ -855,7 +921,14 @@ class DialogueSystem:
         else:
             self.choice_panel.select_next()
         
-        self.audio_manager.play_sound('ui_move', 0, 0, volume=0.3)
+        self.audio_manager.play_sound('ui_move', volume=0.3)
+
+    def _portrait_surface(self, node):
+        assets = getattr(self, "assets", None)
+        portrait = getattr(node, "portrait", None)
+        if assets is None or not portrait:
+            return None
+        return assets.image(portrait)
     
     def update(self, dt: float):
         """Update dialogue system."""

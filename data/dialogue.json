@@ -1,0 +1,74 @@
+{
+  "speakers": [
+    {"id": "owl_keeper", "name": "Owl Keeper", "zone": "whispering_path", "x": 780, "start": "owl_hello", "portrait": "trees/treewithowlopen.png"},
+    {"id": "wounded_traveler", "name": "Wounded Traveler", "zone": "owl_clearing", "x": 900, "start": "traveler_hello", "portrait": "player/playerstanding.png"},
+    {"id": "swamp_hermit", "name": "Swamp Hermit", "zone": "swamp_crossing", "x": 860, "start": "hermit_hello", "portrait": "wizard.png"},
+    {"id": "palace_scout", "name": "Palace Scout", "zone": "ninja_palace", "x": 820, "start": "scout_hello", "portrait": "ninja.png"}
+  ],
+  "nodes": {
+    "owl_hello": {
+      "speaker": "Owl Keeper",
+      "text": "The path is listening. Bring me three herbs, or take this feather and go.",
+      "portrait": "trees/treewithowlopen.png",
+      "choices": [
+        {"text": "I will gather the herbs.", "next_node": "owl_herbs", "effects": ["give:herb:3", "flag:herb_offer", "quest:speak_owl", "active_quest:gather_herbs"]},
+        {"text": "I will take the feather.", "next_node": "owl_feather", "effects": ["give:owl_feather"]}
+      ]
+    },
+    "owl_herbs": {
+      "speaker": "Owl Keeper",
+      "text": "Three leaves. Bring them back when the bundle is ready.",
+      "portrait": "trees/treewithowlopen.png"
+    },
+    "owl_feather": {
+      "speaker": "Owl Keeper",
+      "text": "The feather will open the next clearing.",
+      "portrait": "trees/treewithowlopen.png"
+    },
+    "traveler_hello": {
+      "speaker": "Wounded Traveler",
+      "text": "The wizard crossed me. A bandage would help, if you can spare one.",
+      "portrait": "player/playerstanding.png",
+      "choices": [
+        {"text": "Take this bandage.", "next_node": "traveler_thanks", "effects": ["give:traveler_bandage"], "conditions": ["flag:herb_offer"]},
+        {"text": "I have to keep moving.", "next_node": "traveler_bye"}
+      ]
+    },
+    "traveler_thanks": {
+      "speaker": "Wounded Traveler",
+      "text": "You spoke with the keeper. That is enough for me.",
+      "portrait": "player/playerstanding.png"
+    },
+    "traveler_bye": {
+      "speaker": "Wounded Traveler",
+      "text": "Then watch the sky. He flies low.",
+      "portrait": "player/playerstanding.png"
+    },
+    "hermit_hello": {
+      "speaker": "Swamp Hermit",
+      "text": "The crocodile owns the crossing until someone stills it.",
+      "portrait": "wizard.png",
+      "choices": [
+        {"text": "I will clear the swamp.", "next_node": "hermit_mark", "effects": ["active_quest:clear_swamp"]}
+      ]
+    },
+    "hermit_mark": {
+      "speaker": "Swamp Hermit",
+      "text": "Jump the lunge. Do not try to block the teeth.",
+      "portrait": "wizard.png"
+    },
+    "scout_hello": {
+      "speaker": "Palace Scout",
+      "text": "The ninja throws high, level, and low. Match the shield, then strike.",
+      "portrait": "ninja.png",
+      "choices": [
+        {"text": "Mark the palace on my map.", "next_node": "scout_map", "effects": ["give:scout_map", "active_quest:defeat_ninja"]}
+      ]
+    },
+    "scout_map": {
+      "speaker": "Palace Scout",
+      "text": "The gate is the far end of this hall.",
+      "portrait": "ninja.png"
+    }
+  }
+}

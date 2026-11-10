@@ -15,6 +15,7 @@ from src.gameplay.world import World
 from src.scenes.world_scene import DayNightCycle, TimeOfDay, WeatherSystem, WeatherType
 from src.systems.particle_system import ParticleSystem
 from src.ui.inventory_system import InventorySystem
+from src.ui.dialogue_system import DialogueState, DialogueSystem
 from src.gameplay.progression import Progression
 
 
@@ -52,6 +53,10 @@ class GameplayScene(Scene):
             pygame.init()
         self.inventory = InventorySystem(input_manager, audio_manager or _QuietAudio(), rows=4, cols=6)
         self.progression = Progression()
+        self.dialogue = DialogueSystem(input_manager, audio_manager or _QuietAudio())
+        self.dialogue.bind(self.progression, self.inventory)
+        self.dialogue.load_file()
+        self.dialogue.assets = assets
         self.camera = Camera(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, 3400)
         self.day_night = DayNightCycle()
         self.day_night.cycle_duration = 8 * 60
@@ -96,13 +101,22 @@ class GameplayScene(Scene):
         if not self._entered:
             self._load_zone("whispering_path", reset_player=True)
             self._entered = True
-        if self.input_manager.is_action_just_pressed("inventory"):
+        if self.input_manager.is_action_just_pressed("inventory") and self.dialogue.state == DialogueState.HIDDEN:
             self.open_inventory()
         if self.input_manager.is_action_just_pressed("pause"):
             self.request_scene("main_menu")
             return
-        self.player.update(delta_time, self.world.ground_y)
-        self._update_enemies(delta_time)
+        if self.dialogue.state != DialogueState.HIDDEN:
+            self.dialogue.update(delta_time)
+            if self.input_manager.is_action_just_pressed("interact"):
+                self.dialogue.advance_dialogue()
+        else:
+            speaker = self._nearby_speaker()
+            if speaker and self.input_manager.is_action_just_pressed("interact"):
+                self.dialogue.start_dialogue(speaker["start"])
+            else:
+                self.player.update(delta_time, self.world.ground_y)
+                self._update_enemies(delta_time)
         self.player.x = max(0, min(self.player.x, self.world.width - self.player.width))
         next_zone = self.world.zone_after(self.player.x + self.player.width)
         if next_zone:
@@ -140,6 +154,14 @@ class GameplayScene(Scene):
 
     def open_inventory(self):
         self.inventory.toggle_inventory()
+
+    def _nearby_speaker(self):
+        for speaker in getattr(self.dialogue, "speakers", []):
+            if speaker["zone"] != self.world.zone_id:
+                continue
+            if abs(self.player.x - speaker["x"]) < 90:
+                return speaker
+        return None
 
     def resolve_projectile(self, shot_top: int, damage: int = 1) -> str:
         """Block a shot only at the matching shield height. Otherwise hurt the player."""

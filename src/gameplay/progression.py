@@ -28,6 +28,7 @@ class Progression:
         self.total_xp = 0
         self.unlocked = []
         self.toasts = []
+        self.flags = {}
         self.survival_time = 0.0
         self.active_quest = "speak_owl"
 
@@ -156,6 +157,7 @@ class Progression:
             "unlocked": list(self.unlocked),
             "survival_time": self.survival_time,
             "active_quest": self.active_quest,
+            "flags": dict(self.flags),
         }
 
     def load(self, data: dict):
@@ -170,3 +172,4 @@ class Progression:
         self.unlocked = list(data.get("unlocked", []))
         self.survival_time = data.get("survival_time", 0)
         self.active_quest = data.get("active_quest", self.active_quest)
+        self.flags = dict(data.get("flags", {}))
