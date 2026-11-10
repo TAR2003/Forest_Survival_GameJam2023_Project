@@ -90,7 +90,7 @@ class SliderControl(UIElement):
         
         # Play sound if value changed significantly
         if abs(self.current_value - old_value) > (self.max_value - self.min_value) * 0.05:
-            self.audio_manager.play_sound('click', 0, 0, volume=0.2)
+            self.audio_manager.play_sound('click', volume=0.2)
     
     def handle_mouse_down(self, mouse_pos: Tuple[int, int]) -> bool:
         """Handle mouse down event."""
@@ -113,7 +113,7 @@ class SliderControl(UIElement):
         """Handle mouse up event."""
         if self.dragging:
             self.dragging = False
-            self.audio_manager.play_sound('click', 0, 0, volume=0.3)
+            self.audio_manager.play_sound('click', volume=0.3)
     
     def handle_mouse_motion(self, mouse_pos: Tuple[int, int]):
         """Handle mouse motion event."""
@@ -230,7 +230,7 @@ class ToggleControl(UIElement):
     def toggle_value(self):
         """Toggle the boolean value."""
         self.current_value = not self.current_value
-        self.audio_manager.play_sound('click', 0, 0, volume=0.4)
+        self.audio_manager.play_sound('click', volume=0.4)
     
     def handle_click(self, mouse_pos: Tuple[int, int]) -> bool:
         """Handle click event."""
@@ -330,14 +330,14 @@ class DropdownControl(UIElement):
     def toggle_expanded(self):
         """Toggle dropdown expanded state."""
         self.expanded = not self.expanded
-        self.audio_manager.play_sound('click', 0, 0, volume=0.3)
+        self.audio_manager.play_sound('click', volume=0.3)
     
     def select_option(self, index: int):
         """Select an option."""
         if 0 <= index < len(self.options):
             self.current_index = index
             self.expanded = False
-            self.audio_manager.play_sound('click', 0, 0, volume=0.4)
+            self.audio_manager.play_sound('click', volume=0.4)
     
     def handle_click(self, mouse_pos: Tuple[int, int]) -> bool:
         """Handle click event."""
@@ -512,7 +512,7 @@ class CategoryTab(UIElement):
         if active != self.active:
             self.active = active
             if active:
-                self.audio_manager.play_sound('click', 0, 0, volume=0.3)
+                self.audio_manager.play_sound('click', volume=0.3)
     
     def render(self, surface: pygame.Surface):
         """Render the tab."""
@@ -556,7 +556,8 @@ class SettingsScene(BaseScene):
     
     def __init__(self, scene_manager, input_manager: InputManager,
                  audio_manager: AudioManager, settings_manager):
-        super().__init__(scene_manager)
+        super().__init__()
+        self.scene_manager = scene_manager
         self.input_manager = input_manager
         self.audio_manager = audio_manager
         self.settings_manager = settings_manager
@@ -975,8 +976,7 @@ class SettingsScene(BaseScene):
             # For now, just go back
             pass
         
-        transition = SceneTransition("slide", 0.5, direction="right")
-        self.scene_manager.change_scene("main_menu", transition)
+        self.scene_manager.change_scene("main_menu")
     
     def _handle_apply(self):
         """Handle apply button."""
@@ -989,7 +989,7 @@ class SettingsScene(BaseScene):
         self.applying_settings = False
         
         # Show confirmation message
-        self.audio_manager.play_sound('levelup', 0, 0, volume=0.5)
+        self.audio_manager.play_sound('levelup', volume=0.5)
     
     def _handle_reset(self):
         """Handle reset button."""
@@ -997,7 +997,7 @@ class SettingsScene(BaseScene):
         self._reset_settings()
         self.settings_changed = True
         
-        self.audio_manager.play_sound('click', 0, 0, volume=0.5)
+        self.audio_manager.play_sound('click', volume=0.5)
     
     def _apply_settings(self):
         """Apply all current settings."""

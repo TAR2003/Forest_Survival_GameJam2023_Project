@@ -300,7 +300,10 @@ class AudioManager:
         if music_name not in self.music_tracks:
             print(f"Music track not found: {music_name}")
             return
-        
+
+        if self.current_music == music_name and pygame.mixer.music.get_busy():
+            return
+
         music_path = self.music_tracks[music_name]
         
         try:

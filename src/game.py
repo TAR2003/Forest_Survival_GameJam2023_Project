@@ -67,13 +67,22 @@ class ForestSurvivalGame:
         vsync = self.settings_manager.get_setting('video.vsync', config.VSYNC_DEFAULT)
         
         # Create display
+        if isinstance(resolution, (list, tuple)) and len(resolution) == 2:
+            resolution = (int(resolution[0]), int(resolution[1]))
+        else:
+            resolution = config.DEFAULT_RESOLUTION
+
         flags = pygame.HWSURFACE | pygame.DOUBLEBUF
-        if vsync:
-            flags |= pygame.VSYNC
+        vsync_flag = getattr(pygame, "VSYNC", 0)
+        if vsync and vsync_flag:
+            flags |= vsync_flag
         if fullscreen:
             flags |= pygame.FULLSCREEN
-            
-        self.screen = pygame.display.set_mode(resolution, flags)
+
+        try:
+            self.screen = pygame.display.set_mode(resolution, flags)
+        except pygame.error:
+            self.screen = pygame.display.set_mode(resolution)
         pygame.display.set_caption(f"{config.GAME_TITLE} v{config.VERSION}")
         
         # Set icon if available
@@ -84,20 +93,24 @@ class ForestSurvivalGame:
     
     def _register_scenes(self):
         """Register all game scenes with the scene manager."""
-        from src.scenes.splash_screen import SplashScreenScene
-        from src.scenes.main_menu_scene import MainMenuScene
-        from src.scenes.gameplay_scene import GameplayScene
-        from src.scenes.settings_scene import SettingsScene
-        from src.scenes.game_over_scene import GameOverScene
+        from src.scenes.game_over import GameOverScene
+        from src.scenes.main_menu import MainMenuScene
+        from src.scenes.settings_menu import SettingsScene
+        from src.scenes.splash import SplashScene
+        from src.scenes.zone_coming import ZoneComingScene
 
-        self.scene_manager.register_scene('splash', SplashScreenScene())
-        self.scene_manager.register_scene('main_menu', MainMenuScene())
-        self.scene_manager.register_scene('gameplay', GameplayScene())
-        self.scene_manager.register_scene('settings', SettingsScene())
-        self.scene_manager.register_scene('game_over', GameOverScene())
-        
-        # Start with splash screen
-        self.scene_manager.change_scene('splash')
+        self.scene_manager.register_scene('splash', SplashScene(self.scene_manager))
+        self.scene_manager.register_scene(
+            'main_menu',
+            MainMenuScene(self.scene_manager, self.input_manager, self.audio_manager, self.settings_manager),
+        )
+        self.scene_manager.register_scene('gameplay', ZoneComingScene(self.scene_manager))
+        self.scene_manager.register_scene(
+            'settings',
+            SettingsScene(self.scene_manager, self.input_manager, self.audio_manager, self.settings_manager),
+        )
+        self.scene_manager.register_scene('game_over', GameOverScene(self.scene_manager))
+        self.scene_manager.change_scene('splash', transition_duration=0)
     
     def _apply_settings(self):
         """Apply loaded settings to all systems."""
@@ -123,34 +136,32 @@ class ForestSurvivalGame:
         """Main game loop."""
         self.running = True
         
-        # Start background music
-        self.audio_manager.play_music('theme', loops=-1)
-        
         while self.running:
-            # Calculate delta time
             delta_time = self.clock.tick(config.FPS_TARGET) / 1000.0
-            
-            # Update performance monitoring
-            self.performance_monitor.update(delta_time)
-            
-            # Handle events
-            self._handle_events()
-            
-            # Update current scene
-            if self.scene_manager.current_scene:
-                self.scene_manager.current_scene.update(delta_time)
-                
-                # Check for scene change requests
-                next_scene = self.scene_manager.current_scene.get_next_scene()
-                if next_scene:
-                    self.scene_manager.change_scene(next_scene)
-            
-            # Render
-            self._render()
-            
-            # Check for quit conditions
-            if self.scene_manager.should_quit or not self.running:
-                self.running = False
+            self.step(delta_time)
+
+    def step(self, delta_time: float):
+        """Advance one frame. Tests call this without owning the clock."""
+        self.performance_monitor.update(delta_time)
+        self._handle_events()
+        self.scene_manager.update(delta_time)
+        self._consume_scene_request()
+        self._render()
+        if self.scene_manager.should_quit:
+            self.running = False
+
+    def _consume_scene_request(self):
+        scene = self.scene_manager.current_scene
+        if not scene:
+            return
+        requested = scene.get_next_scene()
+        if not requested:
+            return
+        if isinstance(requested, tuple):
+            scene_name, data = requested
+        else:
+            scene_name, data = requested, None
+        self.scene_manager.change_scene(scene_name, data)
     
     def _handle_events(self):
         """Handle pygame events."""
@@ -183,8 +194,7 @@ class ForestSurvivalGame:
         self.screen.fill(config.COLORS['black'])
         
         # Render current scene
-        if self.scene_manager.current_scene:
-            self.scene_manager.current_scene.render(self.screen)
+        self.scene_manager.render(self.screen)
         
         # Render debug overlay if enabled
         if self.performance_monitor.debug_enabled:

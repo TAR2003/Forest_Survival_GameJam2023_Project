@@ -60,6 +60,8 @@ class BaseScene(ABC):
         """
         if data:
             self.scene_data.update(data)
+        if hasattr(self, "on_enter"):
+            self.on_enter()
     
     def exit_scene(self) -> Optional[Dict]:
         """
@@ -68,7 +70,13 @@ class BaseScene(ABC):
         Returns:
             Optional data to pass to next scene
         """
+        if hasattr(self, "on_exit"):
+            self.on_exit()
         return None
+    
+    def request_scene(self, scene_name: str, data: Optional[Dict] = None):
+        """Ask the game loop to change scenes after this update."""
+        self.change_scene(scene_name, data)
     
     def change_scene(self, scene_name: str, data: Optional[Dict] = None):
         """
@@ -217,6 +225,7 @@ class SceneManager:
         self.current_scene: Optional[BaseScene] = None
         self.current_scene_name: Optional[str] = None
         self.transition: Optional[SceneTransition] = None
+        self._pending = None
         self.should_quit = False
         
         print("Scene Manager initialized")
@@ -252,49 +261,33 @@ class SceneManager:
             return
         
         new_scene = self.scenes[scene_name]
-        
-        # Handle scene exit
-        exit_data = None
-        if self.current_scene:
-            exit_data = self.current_scene.exit_scene()
-        
-        # Merge exit data with passed data
-        final_data = exit_data or {}
+        previous_name = self.current_scene_name
+        final_data = {}
+        if self.current_scene and self.current_scene is not new_scene:
+            exited = self.current_scene.exit_scene()
+            if exited:
+                final_data.update(exited)
         if data:
             final_data.update(data)
-        
-        # Set up transition if both scenes exist
-        if (self.current_scene and transition_duration > 0 and 
-            hasattr(pygame, 'display') and pygame.display.get_surface()):
-            
-            # Create transition
-            self.transition = SceneTransition(transition_type, transition_duration)
-            
-            # Render current scene to surface for transition
-            screen = pygame.display.get_surface()
+
+        screen = pygame.display.get_surface() if pygame.display.get_init() else None
+        use_transition = (
+            self.current_scene is not None
+            and self.current_scene is not new_scene
+            and transition_duration > 0
+            and screen is not None
+        )
+        if use_transition:
             from_surface = screen.copy()
-            
-            # Temporarily switch to new scene to render it
-            old_scene = self.current_scene
-            self.current_scene = new_scene
-            self.current_scene.enter_scene(self.current_scene_name, final_data)
-            
-            # Render new scene
             screen.fill((0, 0, 0))
             new_scene.render(screen)
             to_surface = screen.copy()
-            
-            # Start transition
+            self.transition = SceneTransition(transition_type, transition_duration)
             self.transition.start_transition(from_surface, to_surface)
-            
-            # Restore old scene temporarily for transition
-            self.current_scene = old_scene
+            self._pending = (scene_name, new_scene, previous_name, final_data)
         else:
-            # Direct scene change without transition
-            self.current_scene = new_scene
-            self.current_scene_name = scene_name
-            self.current_scene.enter_scene(self.current_scene_name, final_data)
-        
+            self._activate_scene(scene_name, new_scene, previous_name, final_data)
+
         print(f"Changed to scene: {scene_name}")
     
     def update(self, delta_time: float):
@@ -315,12 +308,19 @@ class SceneManager:
         if self.current_scene:
             self.current_scene.update(delta_time)
     
+    def _activate_scene(self, scene_name, new_scene, previous_name, data):
+        """Make new_scene the current scene."""
+        self.current_scene = new_scene
+        self.current_scene_name = scene_name
+        self.current_scene.enter_scene(previous_name, data)
+
     def _complete_scene_change(self):
         """Complete scene change after transition."""
-        if self.transition:
-            # Extract scene info from transition completion
-            # This would be set during change_scene call
-            self.transition = None
+        pending = self._pending
+        self.transition = None
+        self._pending = None
+        if pending:
+            self._activate_scene(*pending)
     
     def render(self, screen: pygame.Surface):
         """

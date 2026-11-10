@@ -185,11 +185,11 @@ class AnimatedButton(UIElement):
     
     def on_hover_enter(self):
         """Called when mouse enters button."""
-        self.audio_manager.play_sound('click', 0, 0, volume=0.3)
+        self.audio_manager.play_sound('click', volume=0.3)
     
     def on_click(self):
         """Called when button is clicked."""
-        self.audio_manager.play_sound('click', 0, 0, volume=0.5)
+        self.audio_manager.play_sound('click', volume=0.5)
         self.pressed = True
         
         # Create ripple effect
@@ -640,7 +640,8 @@ class MainMenuScene(BaseScene):
     
     def __init__(self, scene_manager, input_manager: InputManager, 
                  audio_manager: AudioManager, settings_manager):
-        super().__init__(scene_manager)
+        super().__init__()
+        self.scene_manager = scene_manager
         self.input_manager = input_manager
         self.audio_manager = audio_manager
         self.settings_manager = settings_manager
@@ -673,7 +674,11 @@ class MainMenuScene(BaseScene):
         self.intro_complete = False
         
         self._setup_ui_elements()
-        self._start_intro_sequence()
+        self.state = MenuState.MAIN
+        self.intro_complete = True
+        for element in self.ui_elements:
+            element.visible = True
+            element.alpha = 255
         
         print("Main menu scene initialized")
     
@@ -707,11 +712,9 @@ class MainMenuScene(BaseScene):
         button_x = config.SCREEN_WIDTH // 2 - self.button_width // 2
         
         button_configs = [
-            ("New Game", "new_game"),
-            ("Continue", "continue"),
+            ("Start", "start"),
             ("Settings", "settings"),
-            ("Credits", "credits"),
-            ("Quit", "quit")
+            ("Quit", "quit"),
         ]
         
         for i, (text, action) in enumerate(button_configs):
@@ -723,7 +726,7 @@ class MainMenuScene(BaseScene):
             button.action = action
             
             # Special styling for certain buttons
-            if action == "new_game":
+            if action == "start":
                 button.border_color = config.COLORS['green']
                 button.hover_color = config.COLORS['green']
             elif action == "quit":
@@ -747,7 +750,7 @@ class MainMenuScene(BaseScene):
         self.screen_flash_alpha = 255
         
         # Play intro sound
-        self.audio_manager.play_sound('theme', 0, 0, volume=0.8)
+        self.audio_manager.play_sound('theme', volume=0.8)
     
     def update(self, dt: float):
         """Update main menu scene."""
@@ -824,40 +827,20 @@ class MainMenuScene(BaseScene):
                 return True
             
             elif event.key == pygame.K_RETURN:
-                # Quick start with Enter key
                 if self.state == MenuState.MAIN:
-                    self._handle_button_action("new_game")
+                    self._handle_button_action("start")
                 return True
         
         return False
     
     def _handle_button_action(self, action: str):
         """Handle button action."""
-        if action == "new_game":
-            # Transition to game scene
-            transition = SceneTransition("fade", 1.0, config.COLORS['black'])
-            self.scene_manager.change_scene("game", transition)
-        
-        elif action == "continue":
-            # Load saved game
-            # For now, just start new game
-            transition = SceneTransition("fade", 1.0, config.COLORS['black'])
-            self.scene_manager.change_scene("game", transition)
-        
+        if action == "start":
+            self.scene_manager.change_scene("gameplay")
         elif action == "settings":
-            # Transition to settings scene
-            transition = SceneTransition("slide", 0.5, direction="left")
-            self.scene_manager.change_scene("settings", transition)
-        
-        elif action == "credits":
-            # Show credits
-            self.state = MenuState.CREDITS
-            self.state_timer = 0.0
-        
+            self.scene_manager.change_scene("settings")
         elif action == "quit":
-            # Show quit confirmation
-            self.state = MenuState.QUIT_CONFIRM
-            self.state_timer = 0.0
+            self.scene_manager.change_scene("quit")
     
     def render(self, screen: pygame.Surface):
         """Render the main menu scene."""
@@ -888,12 +871,7 @@ class MainMenuScene(BaseScene):
     
     def on_enter(self):
         """Called when entering the scene."""
-        # Start background music
-        self.audio_manager.play_music('theme', loops=-1, fade_in=2.0)
-        
-        # Reset intro if needed
-        if not self.intro_complete:
-            self._start_intro_sequence()
+        self.audio_manager.play_music('theme', loops=-1)
     
     def on_exit(self):
         """Called when exiting the scene."""
