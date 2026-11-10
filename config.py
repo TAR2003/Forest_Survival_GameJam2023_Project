@@ -14,7 +14,9 @@ DEVELOPER = "Forest Studios"
 DESCRIPTION = "A production-ready 2D action-survival platformer"
 
 # ===== DISPLAY SETTINGS =====
-DEFAULT_RESOLUTION = (1920, 1080)
+DEFAULT_RESOLUTION = (1280, 720)
+SCREEN_WIDTH = DEFAULT_RESOLUTION[0]
+SCREEN_HEIGHT = DEFAULT_RESOLUTION[1]
 MIN_RESOLUTION = (1280, 720)
 SUPPORTED_RESOLUTIONS = [
     (1280, 720),
@@ -59,6 +61,10 @@ LEVEL_THRESHOLDS = {
 
 # ===== PHYSICS & MOVEMENT =====
 PLAYER_MOVE_SPEED = 5
+PLAYER_SPEED = PLAYER_MOVE_SPEED
+PLAYER_JUMP_STRENGTH = JUMP_STRENGTH
+PLAYER_WIDTH = 72
+PLAYER_HEIGHT = 128
 SLIDE_DURATION = 30  # frames
 JUMP_BUFFER_TIME = 0.1  # seconds
 COYOTE_TIME = 0.1  # seconds
@@ -100,13 +106,18 @@ PARALLAX_SPEEDS = [0.2, 0.4, 0.6, 0.8, 1.0, 1.3]
 
 # ===== INPUT SETTINGS =====
 DEFAULT_KEYBINDS = {
-    'move_forward': pygame.K_SPACE,
-    'jump': pygame.K_j,
-    'slide': pygame.K_d,
-    'shield_toggle': pygame.K_s,
-    'attack': pygame.K_a,
+    'move_left': pygame.K_a,
+    'move_right': pygame.K_d,
+    'move_forward': pygame.K_d,
+    'jump': pygame.K_SPACE,
+    'slide': pygame.K_LCTRL,
+    'attack': pygame.K_j,
+    'shield': pygame.K_k,
+    'shield_toggle': pygame.K_k,
     'shield_up': pygame.K_UP,
     'shield_down': pygame.K_DOWN,
+    'interact': pygame.K_e,
+    'inventory': pygame.K_i,
     'pause': pygame.K_ESCAPE,
     'debug': pygame.K_F3,
     'console': pygame.K_BACKQUOTE
@@ -132,6 +143,19 @@ COLORS = {
     'gray': (128, 128, 128),
     'dark_gray': (64, 64, 64),
     'light_gray': (192, 192, 192),
+    # Names the UI and particle systems already index.
+    'red': (220, 20, 60),
+    'green': (124, 252, 0),
+    'blue': (70, 130, 180),
+    'yellow': (255, 255, 0),
+    'cyan': (64, 224, 208),
+    'orange': (255, 165, 0),
+    'brown': (139, 69, 19),
+    'dark_blue': (12, 28, 36),
+    'purple': (148, 0, 211),
+    'sky_blue': (135, 206, 235),
+    'gold': (255, 215, 0),
+    'dark_red': (139, 0, 0),
     
     # Theme Colors (Forest)
     'forest_green': (34, 139, 34),

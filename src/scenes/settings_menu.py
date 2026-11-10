@@ -704,21 +704,21 @@ class SettingsScene(BaseScene):
         controls = {}
         
         # Master Volume slider
-        controls['master_volume'] = SliderControl(
+        controls['master'] = SliderControl(
             self.left_margin, y_offset, 250, 35,
             0, 100, 80, "Master Volume", self.control_font, self.audio_manager
         )
         y_offset += self.control_spacing
         
         # Music Volume slider
-        controls['music_volume'] = SliderControl(
+        controls['music'] = SliderControl(
             self.left_margin, y_offset, 250, 35,
             0, 100, 70, "Music Volume", self.control_font, self.audio_manager
         )
         y_offset += self.control_spacing
         
         # SFX Volume slider
-        controls['sfx_volume'] = SliderControl(
+        controls['sfx'] = SliderControl(
             self.left_margin, y_offset, 250, 35,
             0, 100, 85, "Sound Effects", self.control_font, self.audio_manager
         )

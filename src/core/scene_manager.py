@@ -87,6 +87,23 @@ class BaseScene(ABC):
         return next_scene
 
 
+class Scene(BaseScene):
+    """Named scene. Subclasses implement update, render, and handle_event."""
+
+    def __init__(self, name: str = ""):
+        super().__init__()
+        self.name = name
+
+    def update(self, delta_time: float):
+        return None
+
+    def render(self, screen: pygame.Surface):
+        return None
+
+    def handle_event(self, event: pygame.event.Event):
+        return None
+
+
 class SceneTransition:
     """Handles smooth transitions between scenes."""
     

@@ -75,7 +75,7 @@ class SettingsManager:
         Get a setting value using dot notation.
         
         Args:
-            key: Setting key in dot notation (e.g., 'audio.master_volume')
+            key: Setting key in dot notation (e.g., 'audio.master')
             default: Default value if key not found
             
         Returns:

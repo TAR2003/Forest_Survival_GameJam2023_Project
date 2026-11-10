@@ -8,20 +8,12 @@ import sys
 from typing import Dict, Optional
 from pathlib import Path
 
-# Import core systems
-from core.scene_manager import SceneManager
-from core.input_manager import InputManager
-from core.audio_manager import AudioManager
-from core.save_manager import SaveManager
-from core.performance_monitor import PerformanceMonitor
-from settings import SettingsManager
-
-# Import scenes
-from scenes.splash_screen import SplashScreenScene
-from scenes.main_menu_scene import MainMenuScene
-from scenes.gameplay_scene import GameplayScene
-from scenes.settings_scene import SettingsScene
-from scenes.game_over_scene import GameOverScene
+from src.core.scene_manager import SceneManager
+from src.core.input_manager import InputManager
+from src.core.audio_manager import AudioManager
+from src.core.save_manager import SaveManager
+from src.core.performance_monitor import PerformanceMonitor
+from src.settings import SettingsManager
 
 import config
 
@@ -92,6 +84,12 @@ class ForestSurvivalGame:
     
     def _register_scenes(self):
         """Register all game scenes with the scene manager."""
+        from src.scenes.splash_screen import SplashScreenScene
+        from src.scenes.main_menu_scene import MainMenuScene
+        from src.scenes.gameplay_scene import GameplayScene
+        from src.scenes.settings_scene import SettingsScene
+        from src.scenes.game_over_scene import GameOverScene
+
         self.scene_manager.register_scene('splash', SplashScreenScene())
         self.scene_manager.register_scene('main_menu', MainMenuScene())
         self.scene_manager.register_scene('gameplay', GameplayScene())
@@ -104,13 +102,13 @@ class ForestSurvivalGame:
     def _apply_settings(self):
         """Apply loaded settings to all systems."""
         # Audio settings
-        master_volume = self.settings_manager.get_setting('audio.master_volume', 0.8)
+        master_volume = self.settings_manager.get_setting('audio.master', 0.8)
         self.audio_manager.set_master_volume(master_volume)
         
-        music_volume = self.settings_manager.get_setting('audio.music_volume', 0.7)
+        music_volume = self.settings_manager.get_setting('audio.music', 0.7)
         self.audio_manager.set_music_volume(music_volume)
         
-        sfx_volume = self.settings_manager.get_setting('audio.sfx_volume', 0.9)
+        sfx_volume = self.settings_manager.get_setting('audio.sfx', 0.9)
         self.audio_manager.set_sfx_volume(sfx_volume)
         
         # Input settings

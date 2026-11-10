@@ -576,10 +576,15 @@ class ParticleSystem:
         for particle in particles_to_render:
             particle.render(surface, camera_offset)
     
-    def emit_burst(self, x: float, y: float, config: ParticleConfig):
-        """Emit a burst of particles at a position."""
-        for _ in range(config.count):
-            particle = Particle(x, y, config)
+    def emit_burst(self, x: float, y: float, preset):
+        """Emit a burst of particles at a position.
+
+        preset is a PARTICLE_PRESETS name or a ParticleConfig.
+        """
+        if isinstance(preset, str):
+            preset = PARTICLE_PRESETS[preset]
+        for _ in range(preset.count):
+            particle = Particle(x, y, preset)
             if len(self.particles) < self.max_particles:
                 self.particles.append(particle)
     
@@ -700,5 +705,18 @@ PARTICLE_PRESETS = {
         gravity=-60,
         spread_angle=math.pi / 6,
         direction=-math.pi / 2
-    )
+    ),
+
+    'blood_splatter': ParticleConfig(
+        ParticleType.BLOOD,
+        count=12,
+        lifetime=0.7,
+        speed_min=40,
+        speed_max=140,
+        size_min=2,
+        size_max=5,
+        color=config.COLORS['red'],
+        gravity=400,
+        spread_angle=math.pi / 2
+    ),
 }
