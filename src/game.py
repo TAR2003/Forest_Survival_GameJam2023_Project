@@ -143,6 +143,7 @@ class ForestSurvivalGame:
     def step(self, delta_time: float):
         """Advance one frame. Tests call this without owning the clock."""
         self.performance_monitor.update(delta_time)
+        self.input_manager.update(delta_time)
         self._handle_events()
         self.scene_manager.update(delta_time)
         self._consume_scene_request()

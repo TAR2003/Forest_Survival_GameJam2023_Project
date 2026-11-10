@@ -327,6 +327,14 @@ class InputManager:
     def is_action_pressed(self, action: str) -> bool:
         """Check if action is currently pressed."""
         return action in self.actions_pressed
+
+    def is_action_held(self, action: str) -> bool:
+        """Check if an action is held down."""
+        return self.is_action_pressed(action)
+
+    def get_mouse_position(self) -> tuple:
+        """Return the latest mouse position in window pixels."""
+        return self.mouse_pos
     
     def is_action_just_pressed(self, action: str) -> bool:
         """Check if action was just pressed this frame."""

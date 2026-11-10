@@ -17,9 +17,9 @@ class SettingsManager:
     Manages game settings with persistence, validation, and easy access.
     """
     
-    def __init__(self):
+    def __init__(self, settings_file: Optional[Path] = None):
         """Initialize the settings manager."""
-        self.settings_file = config.SAVES_DIR / "settings.json"
+        self.settings_file = Path(settings_file) if settings_file else config.SAVES_DIR / "settings.json"
         self.settings = deepcopy(config.DEFAULT_SAVE_DATA['settings'])
         self._dirty = False  # Track if settings need saving
     

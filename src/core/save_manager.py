@@ -19,12 +19,14 @@ class SaveManager:
     Manages game save data with automatic backups and corruption protection.
     """
     
-    def __init__(self):
+    def __init__(self, save_dir: Optional[Path] = None):
         """Initialize the save manager."""
-        self.save_dir = config.SAVES_DIR
+        self.save_dir = Path(save_dir) if save_dir else config.SAVES_DIR
         self.save_file = self.save_dir / "game_data.json"
         self.backup_dir = self.save_dir / "backups"
         self.max_backups = 5
+        self.slot_count = 3
+        self.active_slot = 1
         
         # Current game data
         self.game_data = deepcopy(config.DEFAULT_SAVE_DATA)
@@ -41,36 +43,59 @@ class SaveManager:
         print("Save Manager initialized")
     
     def load_game_data(self) -> bool:
-        """
-        Load game data from file.
-        
-        Returns:
-            True if loaded successfully, False if using defaults
-        """
+        """Load the active slot, or defaults when it is missing or outdated."""
+        return self.load_slot(self.active_slot)
+
+    def _slot_path(self, slot: int) -> Path:
+        if slot < 1 or slot > self.slot_count:
+            raise ValueError(f"Save slot must be 1..{self.slot_count}")
+        return self.save_dir / f"slot_{slot}.json"
+
+    def load_slot(self, slot: int) -> bool:
+        """Load one slot. A missing file or a different version uses defaults."""
+        self.active_slot = slot
+        path = self._slot_path(slot)
+        if not path.exists():
+            self.game_data = deepcopy(config.DEFAULT_SAVE_DATA)
+            return False
         try:
-            if self.save_file.exists():
-                # Try to load main save file
-                with open(self.save_file, 'r', encoding='utf-8') as f:
-                    loaded_data = json.load(f)
-                
-                # Validate and merge with defaults
-                self.game_data = self._validate_and_merge_data(loaded_data)
-                print("Game data loaded successfully")
-                return True
-            else:
-                print("No save file found, using defaults")
-                return False
-                
-        except (json.JSONDecodeError, IOError) as e:
-            print(f"Error loading save file: {e}")
-            
-            # Try to load from backup
-            if self._restore_from_backup():
-                print("Restored from backup")
-                return True
-            else:
-                print("Using default game data")
-                return False
+            with open(path, "r", encoding="utf-8") as handle:
+                loaded_data = json.load(handle)
+        except (json.JSONDecodeError, IOError) as exc:
+            print(f"Error loading save slot {slot}: {exc}")
+            self.game_data = deepcopy(config.DEFAULT_SAVE_DATA)
+            return False
+        if loaded_data.get("version") != config.SAVE_VERSION:
+            print(f"Save slot {slot} version {loaded_data.get('version')} does not match {config.SAVE_VERSION}")
+            self.game_data = deepcopy(config.DEFAULT_SAVE_DATA)
+            return False
+        self.game_data = self._validate_and_merge_data(loaded_data)
+        return True
+
+    def save_slot(self, slot: int, create_backup: bool = True) -> bool:
+        """Write one slot as JSON and keep the previous file as a backup."""
+        self.active_slot = slot
+        path = self._slot_path(slot)
+        try:
+            self.save_dir.mkdir(parents=True, exist_ok=True)
+            self.backup_dir.mkdir(parents=True, exist_ok=True)
+            if create_backup and path.exists():
+                backup = self.backup_dir / f"slot_{slot}.json"
+                shutil.copy2(str(path), str(backup))
+            self.game_data["last_save_time"] = datetime.now().isoformat()
+            self.game_data["save_count"] = self.game_data.get("save_count", 0) + 1
+            self.game_data["slot"] = slot
+            temp_file = path.with_suffix(".tmp")
+            with open(temp_file, "w", encoding="utf-8") as handle:
+                json.dump(self.game_data, handle, indent=2, ensure_ascii=False)
+            shutil.move(str(temp_file), str(path))
+            self.save_file = path
+            self._data_dirty = False
+            self._last_auto_save = time.time()
+            return True
+        except (IOError, OSError) as exc:
+            print(f"Error saving slot {slot}: {exc}")
+            return False
     
     def save_game_data(self, create_backup: bool = True) -> bool:
         """
@@ -82,31 +107,7 @@ class SaveManager:
         Returns:
             True if saved successfully
         """
-        try:
-            # Create backup if requested
-            if create_backup and self.save_file.exists():
-                self._create_backup()
-            
-            # Update metadata
-            self.game_data['last_save_time'] = datetime.now().isoformat()
-            self.game_data['save_count'] = self.game_data.get('save_count', 0) + 1
-            
-            # Write to temporary file first
-            temp_file = self.save_file.with_suffix('.tmp')
-            with open(temp_file, 'w', encoding='utf-8') as f:
-                json.dump(self.game_data, f, indent=2, ensure_ascii=False)
-            
-            # Replace original file with temporary file
-            shutil.move(str(temp_file), str(self.save_file))
-            
-            self._data_dirty = False
-            self._last_auto_save = time.time()
-            print("Game data saved successfully")
-            return True
-            
-        except IOError as e:
-            print(f"Error saving game data: {e}")
-            return False
+        return self.save_slot(self.active_slot, create_backup=create_backup)
     
     def auto_save_if_needed(self):
         """Perform auto-save if enough time has passed and data is dirty."""

@@ -870,10 +870,18 @@ class SettingsScene(BaseScene):
         self.controls[SettingsCategory.ACCESSIBILITY] = controls
     
     def _load_current_settings(self):
-        """Load current settings values into controls."""
-        # This would load from settings_manager
-        # For now, just use default values
-        pass
+        """Load saved audio and video values into the sliders and toggles."""
+        audio = self.settings_manager.get_setting("audio", {})
+        graphics = self.controls[SettingsCategory.GRAPHICS]
+        audio_controls = self.controls[SettingsCategory.AUDIO]
+        audio_controls["master"].current_value = float(audio.get("master", 0.8)) * 100
+        audio_controls["music"].current_value = float(audio.get("music", 0.7)) * 100
+        audio_controls["sfx"].current_value = float(audio.get("sfx", 0.9)) * 100
+        video = self.settings_manager.get_setting("video", {})
+        graphics["fullscreen"].current_value = bool(video.get("fullscreen", False))
+        graphics["fullscreen"].switch_progress = 1.0 if graphics["fullscreen"].current_value else 0.0
+        graphics["vsync"].current_value = bool(video.get("vsync", True))
+        graphics["vsync"].switch_progress = 1.0 if graphics["vsync"].current_value else 0.0
     
     def update(self, dt: float):
         """Update settings scene."""
@@ -1000,10 +1008,21 @@ class SettingsScene(BaseScene):
         self.audio_manager.play_sound('click', volume=0.5)
     
     def _apply_settings(self):
-        """Apply all current settings."""
-        # This would save settings to settings_manager
-        # and apply them to the game
-        pass
+        """Write slider and toggle values to the settings file and the mixer."""
+        audio_controls = self.controls[SettingsCategory.AUDIO]
+        graphics = self.controls[SettingsCategory.GRAPHICS]
+        master = audio_controls["master"].current_value / 100
+        music = audio_controls["music"].current_value / 100
+        sfx = audio_controls["sfx"].current_value / 100
+        self.settings_manager.set_setting("audio.master", master)
+        self.settings_manager.set_setting("audio.music", music)
+        self.settings_manager.set_setting("audio.sfx", sfx)
+        self.settings_manager.set_setting("video.fullscreen", bool(graphics["fullscreen"].current_value))
+        self.settings_manager.set_setting("video.vsync", bool(graphics["vsync"].current_value))
+        self.settings_manager.save_settings()
+        self.audio_manager.set_master_volume(master)
+        self.audio_manager.set_music_volume(music)
+        self.audio_manager.set_sfx_volume(sfx)
     
     def _reset_settings(self):
         """Reset all settings to default values."""

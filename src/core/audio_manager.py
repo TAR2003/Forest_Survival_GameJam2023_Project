@@ -58,7 +58,7 @@ class AudioManager:
     Advanced audio manager with spatial sound, dynamic mixing, and music layers.
     """
     
-    def __init__(self):
+    def __init__(self, audio_dir: Optional[Path] = None):
         """Initialize the audio manager."""
         # Initialize pygame mixer if not already done
         if not pygame.mixer.get_init():
@@ -93,7 +93,7 @@ class AudioManager:
         self.sound_variations: Dict[str, List[str]] = {}
         
         # Audio file paths
-        self.audio_dir = config.AUDIO_DIR
+        self.audio_dir = Path(audio_dir) if audio_dir else config.AUDIO_DIR
         
         # Load audio files
         self._load_audio_files()
@@ -114,38 +114,24 @@ class AudioManager:
             print(f"Audio directory not found: {self.audio_dir}")
             return
         
-        # Load sound effects
-        sound_files = [
-            'attack.wav', 'bombsound.wav', 'bounce.wav', 'bulletsound.wav',
-            'bunce.wav', 'celebrate.wav', 'click.wav', 'fall.wav',
-            'jump.wav', 'levelup.wav', 'monshout.wav', 'monstershout.wav',
-            'mont.wav', 'move.wav', 'siren.wav', 'slide.wav',
-            'string.wav'
-        ]
-        
-        for sound_file in sound_files:
-            file_path = self.audio_dir / sound_file
-            if file_path.exists():
-                try:
-                    sound = pygame.mixer.Sound(str(file_path))
-                    sound_name = sound_file.replace('.wav', '')
-                    self.sounds[sound_name] = sound
-                    print(f"Loaded sound: {sound_name}")
-                except pygame.error as e:
-                    print(f"Failed to load {sound_file}: {e}")
-        
-        # Load music tracks
-        music_files = ['ingame.wav', 'theme.wav']
-        
-        for music_file in music_files:
-            file_path = self.audio_dir / music_file
-            if file_path.exists():
-                music_name = music_file.replace('.wav', '')
-                self.music_tracks[music_name] = str(file_path)
-                print(f"Registered music: {music_name}")
-        
-        # Set up sound variations
+        music_names = {"theme", "ingame", "string"}
+        for file_path in sorted(self.audio_dir.glob("*.wav")):
+            if not self._load_sound_file(file_path):
+                continue
+            if file_path.stem in music_names:
+                self.music_tracks[file_path.stem] = str(file_path)
+                print(f"Registered music: {file_path.stem}")
         self._setup_sound_variations()
+
+    def _load_sound_file(self, file_path: Path) -> bool:
+        """Load one wav. A bad file is logged and skipped."""
+        try:
+            self.sounds[file_path.stem] = pygame.mixer.Sound(str(file_path))
+            print(f"Loaded sound: {file_path.stem}")
+            return True
+        except pygame.error as exc:
+            print(f"Failed to load {file_path.name}: {exc}")
+            return False
     
     def _setup_sound_variations(self):
         """Set up sound variations for variety."""
