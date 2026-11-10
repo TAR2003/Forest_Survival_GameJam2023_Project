@@ -201,6 +201,7 @@ class HealthBar(HUDElement):
         
         # Calculate health percentage
         health_percent = self.displayed_health / self.max_health if self.max_health > 0 else 0
+        self.fill_ratio = health_percent
         
         # Determine health color
         if health_percent < 0.25:
@@ -404,11 +405,12 @@ class StaminaBar(HUDElement):
             pygame.draw.rect(surface, stamina_color, fill_rect)
             
             # Add gradient effect
-            for i in range(fill_rect.height // 2):
-                alpha = int(50 * (1 - i / (fill_rect.height // 2)))
-                gradient_color = (*config.COLORS['white'], alpha)
-                gradient_rect = pygame.Rect(fill_rect.x, fill_rect.y + i, fill_rect.width, 1)
-                surface.fill(gradient_color, gradient_rect, special_flags=pygame.BLEND_ALPHA_SDL2)
+            if fill_rect.height > 1 and fill_rect.width > 0:
+                shade = pygame.Surface((fill_rect.width, fill_rect.height // 2), pygame.SRCALPHA)
+                for i in range(shade.get_height()):
+                    alpha = int(50 * (1 - i / shade.get_height()))
+                    pygame.draw.line(shade, (*config.COLORS['white'], alpha), (0, i), (fill_rect.width, i))
+                surface.blit(shade, fill_rect.topleft)
         
         # Draw regeneration particles
         for particle in self.regen_particles:
@@ -981,10 +983,34 @@ class HUDSystem:
         # Sort by priority
         self.elements.sort(key=lambda x: x.priority)
     
-    def update(self, dt: float, screen_width: int, screen_height: int):
-        """Update all HUD elements."""
+    def update(self, dt: float, screen_width: int, screen_height: int, player=None,
+               progression=None, zone=None, time_label: str = ""):
+        """Update all HUD elements from the player, quest, and clock."""
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.zone_name = ""
+        self.zone_width = 1
+        self.quest_line = ""
+        self.time_label = time_label
+        self.player_ratio = 0.0
+        self.exit_ratio = 1.0
+        if player is not None:
+            self.update_health(player.health, player.max_health)
+            self.health_bar.displayed_health = self.health_bar.current_health
+            self.update_stamina(player.stamina, player.max_stamina)
+            weapon = getattr(player, "weapon_name", "Hunter Sword")
+            self.update_weapon(weapon)
+            self.player_ratio = player.x
+        if isinstance(zone, dict):
+            self.zone_name = zone.get("name", "")
+            self.zone_width = max(1, zone.get("width", 1))
+            self.exit_ratio = 1.0 if zone.get("exit") else 0.98
+            self.player_ratio = self.player_ratio / self.zone_width
+        if progression is not None:
+            self.quest_line = progression.objective()
+            toast = progression.pop_toast()
+            if toast:
+                self.show_notification(toast)
         
         # Update particle system
         self.particle_system.update(dt)
@@ -1001,6 +1027,7 @@ class HUDSystem:
         # Render HUD elements in priority order
         for element in self.elements:
             element.render(screen)
+        self._render_zone_readout(screen)
         
         # Render state-specific overlays
         if self.state == HUDState.PAUSED:
@@ -1008,6 +1035,22 @@ class HUDSystem:
         elif self.state == HUDState.COMBAT:
             self._render_combat_overlay(screen)
     
+    def _render_zone_readout(self, screen: pygame.Surface):
+        """Zone name, quest line, time icon, and a bar of the current zone."""
+        font = pygame.font.Font(None, 28)
+        zone = getattr(self, "zone_name", "")
+        quest = getattr(self, "quest_line", "")
+        clock = getattr(self, "time_label", "")
+        screen.blit(font.render(zone, True, config.COLORS["white"]), (240, 18))
+        screen.blit(font.render(quest, True, config.COLORS["yellow"]), (240, 48))
+        screen.blit(font.render(clock, True, config.COLORS["cyan"]), (240, 78))
+        bar = pygame.Rect(screen.get_width() - 280, 24, 240, 12)
+        pygame.draw.rect(screen, config.COLORS["dark_gray"], bar)
+        player_x = bar.x + int(bar.width * max(0, min(1, getattr(self, "player_ratio", 0))))
+        exit_x = bar.x + int(bar.width * getattr(self, "exit_ratio", 1))
+        pygame.draw.rect(screen, config.COLORS["green"], (player_x, bar.y - 2, 4, 16))
+        pygame.draw.rect(screen, config.COLORS["gold"], (exit_x, bar.y - 2, 4, 16))
+
     def _render_pause_overlay(self, screen: pygame.Surface):
         """Render pause overlay."""
         overlay = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
