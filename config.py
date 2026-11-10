@@ -272,6 +272,41 @@ ACHIEVEMENTS = {
         'requirement': {'type': 'survival_time', 'value': 600},
         'tier': 'platinum',
         'xp_reward': 1000
+    },
+    'first_block': {
+        'name': 'Raised Guard',
+        'description': 'Block a shot at the matching height',
+        'requirement': {'type': 'block', 'value': 1},
+        'tier': 'bronze',
+        'xp_reward': 50
+    },
+    'first_kill': {
+        'name': 'First Blood',
+        'description': 'Defeat an enemy',
+        'requirement': {'type': 'kill', 'value': 1},
+        'tier': 'bronze',
+        'xp_reward': 50
+    },
+    'night_survived': {
+        'name': 'Through the Dark',
+        'description': 'Survive one night',
+        'requirement': {'type': 'night', 'value': 1},
+        'tier': 'silver',
+        'xp_reward': 150
+    },
+    'ninja_defeated': {
+        'name': 'Palace Fallen',
+        'description': 'Defeat the palace ninja',
+        'requirement': {'type': 'ninja', 'value': 1},
+        'tier': 'gold',
+        'xp_reward': 400
+    },
+    'herb_gathered': {
+        'name': 'Green Hand',
+        'description': 'Turn in a bundle of forest herbs',
+        'requirement': {'type': 'quest', 'value': 'gather_herbs'},
+        'tier': 'bronze',
+        'xp_reward': 40
     }
 }
 

@@ -70,6 +70,8 @@ class PlayerController:
         self.health = config.PLAYER_START_HEALTH
         self.max_health = config.PLAYER_MAX_HEALTH
         self.stamina = 100.0
+        self.stamina_regen = 25.0
+        self.base_stamina_regen = 25.0
         self.max_stamina = 100.0
         self.invulnerable_timer = 0.0
         self.weapon_damage = 10
@@ -177,7 +179,7 @@ class PlayerController:
         self.attack_timer = max(0.0, self.attack_timer - dt)
         self.invulnerable_timer = max(0.0, self.invulnerable_timer - dt)
         if self.stamina < self.max_stamina and self.attack_timer <= 0:
-            self.stamina = min(self.max_stamina, self.stamina + 25 * dt)
+            self.stamina = min(self.max_stamina, self.stamina + self.stamina_regen * dt)
 
     def attack_rect(self):
         from src.entities.combat_system import sword_rect

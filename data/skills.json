@@ -1,0 +1,8 @@
+{
+  "xp_per_level": 100,
+  "skills": [
+    {"id": "stride", "name": "Stride", "description": "Move faster.", "max_rank": 3, "speed_per_rank": 0.08},
+    {"id": "guard", "name": "Guard", "description": "Recover stamina faster.", "max_rank": 3, "regen_per_rank": 0.15},
+    {"id": "blade", "name": "Blade", "description": "Sword hits harder.", "max_rank": 3, "damage_per_rank": 2}
+  ]
+}

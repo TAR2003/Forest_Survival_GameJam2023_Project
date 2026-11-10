@@ -1,0 +1,9 @@
+{
+  "quests": [
+    {"id": "speak_owl", "name": "Speak to the Owl Keeper", "objective": "Find the Owl Keeper on the Whispering Path.", "xp": 40},
+    {"id": "gather_herbs", "name": "Gather Herbs", "objective": "Bring three herbs, or one bundle, to be rewarded.", "xp": 60, "achievement": "herb_gathered", "reward_item": "potion"},
+    {"id": "clear_swamp", "name": "Clear the Swamp", "objective": "Defeat the crocodile at the crossing.", "xp": 80},
+    {"id": "survive_night", "name": "Survive One Night", "objective": "Stay alive until dawn.", "xp": 80, "achievement": "night_survived"},
+    {"id": "defeat_ninja", "name": "Defeat the Palace Ninja", "objective": "End the ninja in the palace.", "xp": 150, "achievement": "ninja_defeated"}
+  ]
+}

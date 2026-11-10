@@ -12,9 +12,10 @@ from src.entities.player_controller import PlayerController, format_time
 from src.entities.shield_system import projectile_blocked
 from src.gameplay.camera import Camera
 from src.gameplay.world import World
-from src.scenes.world_scene import DayNightCycle, WeatherSystem, WeatherType
+from src.scenes.world_scene import DayNightCycle, TimeOfDay, WeatherSystem, WeatherType
 from src.systems.particle_system import ParticleSystem
 from src.ui.inventory_system import InventorySystem
+from src.gameplay.progression import Progression
 
 
 class _QuietAudio:
@@ -50,6 +51,7 @@ class GameplayScene(Scene):
         if not pygame.get_init():
             pygame.init()
         self.inventory = InventorySystem(input_manager, audio_manager or _QuietAudio(), rows=4, cols=6)
+        self.progression = Progression()
         self.camera = Camera(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, 3400)
         self.day_night = DayNightCycle()
         self.day_night.cycle_duration = 8 * 60
@@ -67,6 +69,9 @@ class GameplayScene(Scene):
             zone_id = data["zone"]
         elif self.save_manager:
             zone_id = self.save_manager.game_data.get("run", {}).get("zone", zone_id)
+        if self.save_manager:
+            self.progression.load(self.save_manager.game_data.get("progression"))
+        self.progression.apply_to_player(self.player)
         self._load_zone(zone_id, reset_player=True)
         if self.audio_manager:
             self.audio_manager.play_music("ingame", loops=-1)
@@ -107,6 +112,10 @@ class GameplayScene(Scene):
         self.particles.update(delta_time)
         self.day_night.update(delta_time)
         self.elapsed_ms += int(delta_time * 1000)
+        self.progression.add_time(delta_time)
+        if self.day_night.time_of_day == TimeOfDay.NIGHT and not getattr(self, "_night_noted", False):
+            self.progression.note("night")
+            self._night_noted = True
 
     def _update_enemies(self, delta_time: float):
         boss = any(enemy.kind == "ninja" and enemy.alive for enemy in self.enemies)
@@ -114,10 +123,15 @@ class GameplayScene(Scene):
         for enemy in self.enemies:
             enemy.update(delta_time, self.player, paused=boss and enemy.kind != "ninja")
             if attack and enemy.alive and attack.colliderect(enemy.rect()):
-                drop = enemy.hit(self.player.weapon_damage)
+                drop = enemy.hit(self.player.weapon_damage + self.progression.damage_bonus())
                 if drop:
                     self.loot.append(drop)
                     self.particles.emit_burst(enemy.x, enemy.y, "enemy_death")
+                    self.progression.note("kill")
+                    if enemy.kind == "ninja":
+                        self.progression.note("ninja")
+                    elif enemy.kind == "crocodile":
+                        self.progression.complete_quest("clear_swamp")
             if enemy.kind == "ninja":
                 for shot in list(enemy.projectiles):
                     if abs(shot["x"] - self.player.x) < 40:
@@ -130,6 +144,7 @@ class GameplayScene(Scene):
     def resolve_projectile(self, shot_top: int, damage: int = 1) -> str:
         """Block a shot only at the matching shield height. Otherwise hurt the player."""
         if projectile_blocked(self.player.shield_raised, self.player.shield_height, shot_top):
+            self.progression.note("block")
             return "blocked"
         return self._hurt(damage)
 
@@ -160,7 +175,14 @@ class GameplayScene(Scene):
         run = self.save_manager.game_data.setdefault("run", {})
         run["health"] = 0
         run["zone"] = self.world.zone_id
+        self._persist_progress()
         self.save_manager.save_game_data()
+
+    def _persist_progress(self):
+        if not self.save_manager:
+            return
+        self.save_manager.game_data["progression"] = self.progression.to_save()
+        self.save_manager.game_data["inventory"] = self.inventory.to_save()
 
     def render(self, screen: pygame.Surface):
         screen.fill(config.COLORS["black"])
