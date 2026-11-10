@@ -704,7 +704,21 @@ class CombatSystem:
         return (not self.is_attacking and 
                 self.recovery_timer <= 0 and 
                 self.stamina >= attack_data.stamina_cost)
-    
+
     def get_active_hitboxes(self) -> List[AttackHitbox]:
         """Get list of active hitboxes for rendering."""
         return self.active_hitboxes
+
+
+DEFAULT_SWORD_DAMAGE = 10
+
+
+def sword_rect(x: float, y: float, width: float, height: float, facing_right: bool) -> pygame.Rect:
+    """Short hitbox in front of the player."""
+    if facing_right:
+        return pygame.Rect(int(x + width - 8), int(y + height * 0.35), 56, 28)
+    return pygame.Rect(int(x - 48), int(y + height * 0.35), 56, 28)
+
+
+def deal_sword_damage(health: int, damage: int = DEFAULT_SWORD_DAMAGE) -> int:
+    return max(0, health - damage)

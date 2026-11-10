@@ -475,7 +475,7 @@ class ShieldSystem:
             'perfect_window_active': self.perfect_block_window_active,
             'recharge_delay': max(0, self.recharge_delay_timer)
         }
-    
+
     def reset(self):
         """Reset shield system to initial state."""
         self.state = ShieldState.INACTIVE
@@ -486,5 +486,13 @@ class ShieldSystem:
         self.perfect_block_timer = 0.0
         self.effects.clear()
         self.shield_visual_intensity = 0.0
-        
-        print("Shield system reset")
+
+
+SHOT_TOPS = {"top": 480, "middle": 540, "bottom": 610}
+
+
+def projectile_blocked(shield_raised: bool, shield_height: str, shot_top: int) -> bool:
+    """A shot is blocked only when the shield is up at the same height."""
+    if not shield_raised:
+        return False
+    return SHOT_TOPS.get(shield_height) == shot_top

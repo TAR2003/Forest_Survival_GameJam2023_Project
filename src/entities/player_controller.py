@@ -69,6 +69,10 @@ class PlayerController:
         self.movement_state = MovementState.GROUNDED
         self.health = config.PLAYER_START_HEALTH
         self.max_health = config.PLAYER_MAX_HEALTH
+        self.stamina = 100.0
+        self.max_stamina = 100.0
+        self.invulnerable_timer = 0.0
+        self.weapon_damage = 10
         self._was_jump_held = False
 
         self._frames = {
@@ -109,9 +113,11 @@ class PlayerController:
         self._jump_held = keys.is_action_held("jump")
         if keys.is_action_just_pressed("jump"):
             self.jump_buffer_timer = self.jump_buffer_time
-        if keys.is_action_just_pressed("slide") and self.on_ground:
+        if keys.is_action_just_pressed("slide") and self.on_ground and self.stamina >= 15:
+            self.stamina -= 15
             self.slide_timer = self.slide_time
-        if keys.is_action_just_pressed("attack"):
+        if keys.is_action_just_pressed("attack") and self.stamina >= 20 and self.attack_timer <= 0:
+            self.stamina -= 20
             self.attack_timer = self.attack_time
             self.state = PlayerState.ATTACKING
         if keys.is_action_just_pressed("shield"):
@@ -169,6 +175,24 @@ class PlayerController:
             self.coyote_timer = max(0.0, self.coyote_timer - dt)
         self.slide_timer = max(0.0, self.slide_timer - dt)
         self.attack_timer = max(0.0, self.attack_timer - dt)
+        self.invulnerable_timer = max(0.0, self.invulnerable_timer - dt)
+        if self.stamina < self.max_stamina and self.attack_timer <= 0:
+            self.stamina = min(self.max_stamina, self.stamina + 25 * dt)
+
+    def attack_rect(self):
+        from src.entities.combat_system import sword_rect
+        if not self.attacking:
+            return None
+        return sword_rect(self.x, self.y, self.width, self.height, self.facing_right)
+
+    def take_damage(self, amount: int) -> bool:
+        """Apply damage unless invulnerable. Returns True when health reaches 0."""
+        if amount <= 0 or self.invulnerable_timer > 0 or self.health <= 0:
+            return self.health <= 0
+        self.health = max(0, self.health - amount)
+        self.invulnerable_timer = 0.7
+        self.state = PlayerState.DYING if self.health <= 0 else PlayerState.HURT
+        return self.health <= 0
 
     def _pick_state(self):
         if self.attacking:
